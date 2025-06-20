@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from 'next-themes';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,9 +18,7 @@ import {
   CreditCard, 
   LogOut,
   ChevronDown,
-  Download,
-  Moon,
-  Sun
+  Download
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -46,10 +43,8 @@ const DashboardLayout = ({
   title, 
   userType,
   currentPath
-}: DashboardLayoutProps) => {
-  const [isCommandOpen, setIsCommandOpen] = useState(false);
+}: DashboardLayoutProps) => {  const [isCommandOpen, setIsCommandOpen] = useState(false);
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
 
   // Define navigation items based on user type
   const getNavigationItems = () => {
