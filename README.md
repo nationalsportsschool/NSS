@@ -1,4 +1,17 @@
-# Welcome to your Lovable project
+# National Sports School Portal
+
+A comprehensive PWA for sports school management with Admin, Coach, and Parent interfaces.
+
+## PWA Features
+
+This project has been enhanced with the following PWA features:
+
+- **Offline Support**: Access previously viewed pages even without an internet connection
+- **Installable**: Add to your home screen for app-like experience on mobile and desktop
+- **Dark Mode**: Automatically adapts to system preferences or manual toggle
+- **Responsive Design**: Optimized for all screen sizes
+- **Fast Loading**: Efficient caching strategies for quick access
+- **Automatic Updates**: Service workers ensure users always get the latest version
 
 ## Project info
 
@@ -54,11 +67,16 @@ npm run dev
 
 This project is built with:
 
-- Vite
+- Vite & vite-plugin-pwa
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
+- PWA service workers
+- React Router
+- React Query
+- next-themes (for dark mode)
+- Recharts (for analytics)
 
 ## How can I deploy this project?
 
@@ -71,3 +89,27 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## PWA Development Notes
+
+### Service Worker Management
+
+- In development mode, service workers are automatically disabled to prevent caching issues
+- In production, vite-plugin-pwa handles registration and updates with the "autoUpdate" strategy
+
+### Theme Support 
+
+- The app supports light, dark, and system themes via next-themes
+- Toggle between themes using the sun/moon icon in the navigation bar
+
+### Installation
+
+- Users will see an install prompt after interacting with the site
+- iOS users receive custom instructions for adding to home screen
+- The prompt is shown once per week unless permanently dismissed
+
+### Offline Support
+
+- The app caches essential assets and API responses
+- An offline banner appears when network connectivity is lost
+- Users can access previously visited pages even when offline

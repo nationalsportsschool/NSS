@@ -30,7 +30,7 @@ const LoginCard = ({ userType, title, description, icon }: LoginCardProps) => {
 
     // Redirect based on user type
     if (userType === 'admin') {
-      navigate('/admin/dashboard');
+      navigate('/admin/analytics');
     } else if (userType === 'coach') {
       navigate('/coach/dashboard');
     } else if (userType === 'parent') {

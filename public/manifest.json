@@ -1,9 +1,9 @@
 
 {
-  "name": "Sports School Login Hub",
+  "name": "National Sports School Portal",
   "short_name": "Sports Hub",
-  "description": "A comprehensive login hub for sports school management",
-  "start_url": "/",
+  "description": "A comprehensive portal for sports school management",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1e40af",
@@ -56,7 +56,7 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Sports School Login Interface"
+      "label": "Sports School Dashboard Interface"
     }
   ],
   "prefer_related_applications": false,
@@ -66,5 +66,53 @@
   "display_override": ["standalone", "minimal-ui"],
   "launch_handler": {
     "client_mode": "focus-existing"
+  },
+  "shortcuts": [
+    {
+      "name": "Admin Dashboard",
+      "short_name": "Admin",
+      "description": "View admin dashboard",
+      "url": "/admin/dashboard",
+      "icons": [
+        {
+          "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Coach Dashboard",
+      "short_name": "Coach",
+      "description": "View coach dashboard",
+      "url": "/coach/dashboard",
+      "icons": [
+        {
+          "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Parent Dashboard",
+      "short_name": "Parent",
+      "description": "View parent dashboard",
+      "url": "/parent/dashboard",
+      "icons": [
+        {
+          "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "share_target": {
+    "action": "/share-target",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
   }
 }

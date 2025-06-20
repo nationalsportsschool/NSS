@@ -1,17 +1,16 @@
 import * as React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { TrendingUp, TrendingDown, Users, DollarSign, Activity, Calendar, Download, ArrowLeft, Clock, MapPin, User, UserPlus, Filter, FileType, Search, Info, IndianRupee } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, DollarSign, Activity, Calendar, Download, ArrowLeft, Clock, MapPin, User, UserPlus, Filter, FileType, Search, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { useToast } from '@/components/ui/use-toast';
 
 // Mock analytics data
 const revenueData = [
@@ -144,7 +143,6 @@ interface AdminAnalyticsProps {
 }
 
 const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
-  const { toast } = useToast();
   const [attendanceView, setAttendanceView] = React.useState<'student' | 'coach'>('student');
   const [showCoachManagement, setShowCoachManagement] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
@@ -188,67 +186,28 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
     setTimeout(() => setIsLoading(false), 500);
   };
 
-  // Mock data - replace with actual API calls
-  const newEnrollments = 32;
-  const attendanceRate = 92.5;
-  const coachCount = 15;
-
-  const revenueBySport = [
-    { sport: 'Cricket', revenue: 120000, color: '#16a34a' },
-    { sport: 'Football', revenue: 95000, color: '#2563eb' },
-    { sport: 'Tennis', revenue: 85000, color: '#f97316' },
-    { sport: 'Athletics', revenue: 70000, color: '#ca8a04' },
-    { sport: 'Others', revenue: 80000, color: '#6b7280' },
-  ];
-
-  const recentActivities = [
-    { id: 1, user: 'Aarav Patel', action: 'enrolled in Cricket', time: '2 hours ago' },
-    { id: 2, user: 'Coach Priya', action: 'added a new drill for Football', time: '5 hours ago' },
-    { id: 3, user: 'Admin', action: 'sent a payment reminder', time: '1 day ago' },
-    { id: 4, user: 'Riya Sharma', action: 'payment of ₹5000 received', time: '2 days ago' },
-  ];
-
-  const studentDemographics = {
-    labels: ['Under 10', '10-13', '14-18', '18+'],
-    datasets: [
-      {
-        label: 'Student Age Groups',
-        data: [45, 78, 62, 25],
-        backgroundColor: ['#3b82f6', '#16a34a', '#f97316', '#ef4444'],
-      },
-    ],
-  };
-
-  const handleExport = (exportFormat: 'pdf' | 'csv') => {
-    toast({
-      title: "Exporting Report",
-      description: `Your report is being generated in ${exportFormat} format.`,
-    });
-    console.log(`Exporting report in ${exportFormat} format`);
-    // Add actual export logic here
-  };
-
   return (
     <DashboardLayout 
       title="Analytics Dashboard" 
       userType="admin" 
       currentPath="/admin/analytics"
-    >      {/* Date Range Selector and Export Controls */}
-      <div className="flex flex-col gap-4 mb-6">
+    >
+      {/* Date Range Selector and Export Controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold">Performance Overview</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">Analyze your academy's key metrics and trends</p>
+          <h2 className="text-xl font-bold">Performance Overview</h2>
+          <p className="text-sm text-muted-foreground">Analyze your academy's key metrics and trends</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
-          <div className="flex bg-muted rounded-md overflow-hidden order-2 sm:order-1">
+        <div className="flex flex-wrap gap-2">
+          <div className="flex bg-muted rounded-md overflow-hidden">
             {(['week', 'month', 'quarter', 'year'] as const).map((range) => (
               <Button 
                 key={range}
                 variant={selectedDateRange === range ? "default" : "ghost"}
                 size="sm"
                 onClick={() => handleDateRangeChange(range)}
-                className="rounded-none h-8 px-2 sm:px-3 text-xs sm:text-sm flex-1 sm:flex-initial"
+                className="rounded-none h-9"
               >
                 {range.charAt(0).toUpperCase() + range.slice(1)}
               </Button>
@@ -259,9 +218,9 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
             <DropdownMenuTrigger asChild>
               <Button 
                 size="sm" 
-                className="bg-green-600 hover:bg-green-700 h-8 order-1 sm:order-2 text-xs sm:text-sm"
+                className="bg-green-600 hover:bg-green-700 h-9"
               >
-                <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
             </DropdownMenuTrigger>
@@ -283,26 +242,28 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      </div>
+
+      {/* Key Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Revenue Card */}
         <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Total Revenue</p>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Revenue</p>
                 {isLoading ? (
-                  <Skeleton className="h-6 sm:h-8 w-20 sm:w-28 mt-1" />
+                  <Skeleton className="h-8 w-28 mt-1" />
                 ) : (
-                  <div className="text-lg sm:text-2xl font-bold truncate">₹{totalRevenue.toLocaleString('en-IN')}</div>
+                  <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
                 )}
                 <div className="flex items-center text-xs text-green-600 mt-1">
-                  <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                  <span className="truncate">+{revenueGrowth}% growth</span>
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  +{revenueGrowth}% growth
                 </div>
               </div>
-              <div className="rounded-full p-2 sm:p-3 bg-red-100 flex-shrink-0">
-                <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-red-600" />
+              <div className="rounded-full p-3 bg-red-100">
+                <DollarSign className="h-6 w-6 text-red-600" />
               </div>
             </div>
           </CardContent>
@@ -310,22 +271,22 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
 
         {/* Students Card */}
         <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Total Students</p>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Students</p>
                 {isLoading ? (
-                  <Skeleton className="h-6 sm:h-8 w-16 sm:w-20 mt-1" />
+                  <Skeleton className="h-8 w-20 mt-1" />
                 ) : (
-                  <div className="text-lg sm:text-2xl font-bold">{totalStudents}</div>
+                  <div className="text-2xl font-bold">{totalStudents}</div>
                 )}
                 <div className="flex items-center text-xs text-green-600 mt-1">
-                  <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                  <span className="truncate">+12% increase</span>
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  +12% increase
                 </div>
               </div>
-              <div className="rounded-full p-2 sm:p-3 bg-blue-100 flex-shrink-0">
-                <Users className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
+              <div className="rounded-full p-3 bg-blue-100">
+                <Users className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
@@ -333,22 +294,22 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
 
         {/* Attendance Card */}
         <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Attendance Rate</p>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Attendance Rate</p>
                 {isLoading ? (
-                  <Skeleton className="h-6 sm:h-8 w-12 sm:w-16 mt-1" />
+                  <Skeleton className="h-8 w-16 mt-1" />
                 ) : (
-                  <div className="text-lg sm:text-2xl font-bold">{avgAttendance}%</div>
+                  <div className="text-2xl font-bold">{avgAttendance}%</div>
                 )}
                 <div className="flex items-center text-xs text-green-600 mt-1">
-                  <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                  <span className="truncate">+3.2% this week</span>
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  +3.2% this week
                 </div>
               </div>
-              <div className="rounded-full p-2 sm:p-3 bg-green-100 flex-shrink-0">
-                <Activity className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
+              <div className="rounded-full p-3 bg-green-100">
+                <Activity className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
@@ -356,53 +317,81 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
 
         {/* Coach Card */}
         <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Coaches</p>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Coaches</p>
                 {isLoading ? (
-                  <Skeleton className="h-6 sm:h-8 w-12 sm:w-16 mt-1" />
+                  <Skeleton className="h-8 w-16 mt-1" />
                 ) : (
-                  <div className="text-lg sm:text-2xl font-bold">{totalCoaches}</div>
+                  <div className="text-2xl font-bold">{totalCoaches}</div>
                 )}
                 <div className="flex items-center text-xs text-green-600 mt-1">
-                  <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                  <span className="truncate">+2 this month</span>
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  +2 this month
                 </div>
               </div>
-              <div className="rounded-full p-2 sm:p-3 bg-amber-100 flex-shrink-0">
-                <User className="h-4 w-4 sm:h-6 sm:w-6 text-amber-600" />
+              <div className="rounded-full p-3 bg-amber-100">
+                <User className="h-6 w-6 text-amber-600" />
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>      {/* Analytics Tabs */}
+      </div>
+
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
+          <Input 
+            placeholder="Search coaches, students, activities..." 
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Filter className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>Filter by Sport</DropdownMenuItem>
+            <DropdownMenuItem>Filter by Date</DropdownMenuItem>
+            <DropdownMenuItem>Filter by Performance</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Analytics Tabs */}
       <Tabs defaultValue="revenue" className="space-y-4">
-        <div className="overflow-x-auto">
-          <TabsList className="grid w-full grid-cols-4 min-w-[320px] max-w-full sm:max-w-2xl">
-            <TabsTrigger value="revenue" className="text-xs sm:text-sm px-2 sm:px-4">Revenue</TabsTrigger>
-            <TabsTrigger value="students" className="text-xs sm:text-sm px-2 sm:px-4">Students</TabsTrigger>
-            <TabsTrigger value="attendance" className="text-xs sm:text-sm px-2 sm:px-4">Attendance</TabsTrigger>
-            <TabsTrigger value="performance" className="text-xs sm:text-sm px-2 sm:px-4">Performance</TabsTrigger>
-          </TabsList>
-        </div>        {/* Revenue Analytics */}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 max-w-3xl">
+          <TabsTrigger value="revenue">Revenue</TabsTrigger>
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+        </TabsList>
+
+        {/* Revenue Analytics */}
         <TabsContent value="revenue" className="space-y-4">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">Revenue Trend</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Monthly revenue growth over time</CardDescription>
+              <CardHeader>
+                <CardTitle>Revenue Trend</CardTitle>
+                <CardDescription>Monthly revenue growth over time</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-6 pt-0">
+              <CardContent>
                 {isLoading ? (
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
+                  <Skeleton className="h-[300px] w-full" />
                 ) : (
-                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
+                  <ChartContainer config={chartConfig} className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={revenueData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" fontSize={12} />
-                        <YAxis fontSize={12} />
+                        <XAxis dataKey="month" />
+                        <YAxis />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Area 
                           type="monotone" 
@@ -419,77 +408,66 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
             </Card>
 
             <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">Revenue by Sport</CardTitle>
+              <CardHeader>
+                <CardTitle>Revenue by Sport</CardTitle>
+                <CardDescription>Revenue distribution across different sports</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-6 pt-0">
-                <ChartContainer config={{}} className="mx-auto aspect-square max-h-[250px] sm:max-h-[300px]">
-                  <PieChart>
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent hideLabel />}
-                    />
-                    <Pie
-                      data={revenueBySport}
-                      dataKey="revenue"
-                      nameKey="sport"
-                      innerRadius={40}
-                      strokeWidth={3}
-                      labelLine={false}
-                      label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
-                        const RADIAN = Math.PI / 180;
-                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                        return (
-                          <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={12}>
-                            {`${(percent * 100).toFixed(0)}%`}
-                          </text>
-                        );
-                      }}
-                    >
-                      {revenueBySport.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ChartContainer>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-[300px] w-full" />
+                ) : (
+                  <ChartContainer config={chartConfig} className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={sportDistribution}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={120}
+                          paddingAngle={5}
+                          dataKey="revenue"
+                          label={(entry: any) => `${entry.sport}: $${entry.revenue}`}
+                        >
+                          {sportDistribution.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                )}
               </CardContent>
-              <CardFooter className="flex-col gap-2 text-xs sm:text-sm pt-0">
-                <div className="flex items-center gap-2 font-medium leading-none">
-                  Trending up by 5.2% this month <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                </div>
-                <div className="leading-none text-muted-foreground text-center">
-                  Showing total revenue by sports category
-                </div>
-              </CardFooter>
             </Card>
           </div>
-        </TabsContent>        {/* Student Analytics */}
+        </TabsContent>
+
+        {/* Student Analytics */}
         <TabsContent value="students" className="space-y-4">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">Student Growth</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Student enrollment over time</CardDescription>
+              <CardHeader>
+                <CardTitle>Student Growth</CardTitle>
+                <CardDescription>Student enrollment over time</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-6 pt-0">
+              <CardContent>
                 {isLoading ? (
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
+                  <Skeleton className="h-[300px] w-full" />
                 ) : (
-                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
+                  <ChartContainer config={chartConfig} className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={revenueData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" fontSize={12} />
-                        <YAxis fontSize={12} />
+                        <XAxis dataKey="month" />
+                        <YAxis />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Line 
                           type="monotone" 
                           dataKey="students" 
                           stroke="#3b82f6" 
-                          strokeWidth={2}
-                          dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
+                          strokeWidth={3}
+                          dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
                         />
                       </LineChart>
                     </ResponsiveContainer>
@@ -499,22 +477,22 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
             </Card>
 
             <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">Students by Sport</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Distribution of students across sports</CardDescription>
+              <CardHeader>
+                <CardTitle>Students by Sport</CardTitle>
+                <CardDescription>Distribution of students across sports</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-6 pt-0">
+              <CardContent>
                 {isLoading ? (
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
+                  <Skeleton className="h-[300px] w-full" />
                 ) : (
-                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
+                  <ChartContainer config={chartConfig} className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={sportDistribution}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="sport" fontSize={11} />
-                        <YAxis fontSize={12} />
+                        <XAxis dataKey="sport" />
+                        <YAxis />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="students" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                        <Bar dataKey="students" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -650,47 +628,96 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
                 )}
               </CardContent>
             </Card>
-          </div>        </TabsContent>        {/* Performance Analytics */}
+          </div>
+        </TabsContent>
+
+        {/* Payments Analytics */}
+        <TabsContent value="payments" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Trends</CardTitle>
+              <CardDescription>Payment success and outstanding payments over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <ChartContainer config={chartConfig} className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={paymentTrends}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Area 
+                        type="monotone" 
+                        dataKey="successful" 
+                        stackId="1"
+                        stroke="#10b981" 
+                        fill="#10b981" 
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="pending" 
+                        stackId="1"
+                        stroke="#f59e0b" 
+                        fill="#f59e0b" 
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="not_paid" 
+                        stackId="1"
+                        stroke="#ef4444" 
+                        fill="#ef4444" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Performance Analytics */}
         <TabsContent value="performance" className="space-y-4">
           <Card>
-            <CardHeader className="pb-3 sm:pb-6">
-              <div className="flex flex-col gap-3 sm:gap-4">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row gap-4 justify-between">
                 <div>
-                  <CardTitle className="text-base sm:text-lg">Coach Performance</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Coach effectiveness metrics and student assignments</CardDescription>
+                  <CardTitle>Coach Performance</CardTitle>
+                  <CardDescription>Coach effectiveness metrics and student assignments</CardDescription>
                 </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <Button onClick={handleAddCoach} size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm">
-                    <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <div className="flex items-center gap-2">
+                  <Button onClick={handleAddCoach} size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <UserPlus className="h-4 w-4 mr-2" />
                     Add Coach
                   </Button>
                   <Button
                     onClick={() => setShowCoachManagement(!showCoachManagement)}
                     variant="outline"
                     size="sm"
-                    className="text-xs sm:text-sm"
                   >
                     {showCoachManagement ? 'View Performance' : 'Manage Students'}
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-3 sm:p-6 pt-0">
+            <CardContent>
               {isLoading ? (
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-4">
                   {Array(5).fill(0).map((_, i) => (
-                    <Skeleton key={i} className="h-12 sm:h-16 w-full" />
+                    <Skeleton key={i} className="h-16 w-full" />
                   ))}
                 </div>
               ) : (
-                <div className="space-y-3 sm:space-y-4 max-h-[350px] sm:max-h-[400px] overflow-y-auto">
-                  <div className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                    Showing 8 of {coachPerformance.length} coaches
+                <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                  <div className="text-sm text-gray-600 mb-4">
+                    Showing 10 of {coachPerformance.length} coaches
                   </div>
-                  {coachPerformance.slice(0, 8).map((coach, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-xs sm:text-sm truncate">{coach.name}</h3>
+                  {coachPerformance.slice(0, 10).map((coach, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h3 className="font-semibold">{coach.name}</h3>
                         <div className="flex items-center space-x-2 mt-1">
                           <Badge variant="outline" className="text-xs">
                             {coach.sport}
@@ -700,12 +727,12 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col lg:flex-row items-end lg:items-center gap-2 lg:gap-4 xl:gap-6 flex-shrink-0">
-                        <div className="text-xs sm:text-sm text-center lg:text-left">
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-6">
+                        <div className="text-sm">
                           <div className="font-medium">{coach.rating}/5.0</div>
                           <div className="text-xs text-gray-500">Rating</div>
                         </div>
-                        <div className="text-xs sm:text-sm text-center lg:text-left">
+                        <div className="text-sm">
                           <div className="font-medium">{coach.retention}%</div>
                           <div className="text-xs text-gray-500">Retention</div>
                         </div>
@@ -714,9 +741,8 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
                             size="sm" 
                             variant="outline"
                             onClick={() => handleAssignStudents(coach.id)}
-                            className="text-xs px-2 py-1"
                           >
-                            Assign
+                            Assign Students
                           </Button>
                         )}
                       </div>

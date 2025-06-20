@@ -12,70 +12,70 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 
 // Sample data - in real app this would come from API
 const childData = {
-  name: "Rohan Sharma",
+  name: "Alex Johnson",
   rollNumber: "S012",
   attendanceRecords: [
     {
       id: '1',
-      date: '2025-06-10',
+      date: '2024-06-10',
       status: 'present' as const,
-      sport: 'Cricket',
-      coach: 'Suresh Kumar'
+      sport: 'Football',
+      coach: 'Mike Wilson'
     },
     {
       id: '2',
-      date: '2025-06-09',
+      date: '2024-06-09',
       status: 'present' as const,
       sport: 'Swimming',
-      coach: 'Anjali Mehta'
+      coach: 'Sarah Davis'
     },
     {
       id: '3',
-      date: '2025-06-08',
+      date: '2024-06-08',
       status: 'late' as const,
-      sport: 'Football',
-      coach: 'Rajesh Singh'
+      sport: 'Basketball',
+      coach: 'John Smith'
     },
     {
       id: '4',
-      date: '2025-06-07',
+      date: '2024-06-07',
       status: 'absent' as const,
       sport: 'Tennis',
-      coach: 'Priya Desai'
+      coach: 'Emma Brown'
     },
     {
       id: '5',
-      date: '2025-06-06',
+      date: '2024-06-06',
       status: 'present' as const,
-      sport: 'Cricket',
-      coach: 'Suresh Kumar'
+      sport: 'Football',
+      coach: 'Mike Wilson'
     }
   ]
 };
 
 const coachInfo = {
   id: '1',
-  name: 'Coach Suresh Kumar',
-  sports: ['Cricket', 'Athletics', 'Football'],
-  experience: '10 years',
-  phone: '+91 98765 43210',
-  email: 'suresh.kumar@sportsschool.co.in',
-  schedule: 'Monday to Friday, 4:00 PM - 7:00 PM'
+  name: 'Coach Mike Wilson',
+  sports: ['Football', 'Athletics', 'Soccer'],
+  experience: '8 years',
+  phone: '+1-234-567-8900',
+  email: 'mike.wilson@sportsschool.edu',
+  schedule: 'Monday to Friday, 3:00 PM - 6:00 PM'
 };
 
 // Mock upcoming classes
 const upcomingClasses = [
-  { id: 1, title: 'Cricket Practice', time: '4:30 PM - 6:00 PM', coach: 'Suresh Kumar', location: 'Main Ground', daysTill: 0 },
-  { id: 2, title: 'Swimming Session', time: '5:00 PM - 6:00 PM', coach: 'Anjali Mehta', location: 'Pool A', daysTill: 1 },
-  { id: 3, title: 'Football Drills', time: '6:00 PM - 7:30 PM', coach: 'Rajesh Singh', location: 'Field B', daysTill: 2 }
+  { id: 1, title: 'Football Training', time: '3:30 PM - 5:00 PM', coach: 'Mike Wilson', location: 'Field A', daysTill: 0 },
+  { id: 2, title: 'Swimming Session', time: '4:15 PM - 5:30 PM', coach: 'Sarah Davis', location: 'Pool 2', daysTill: 1 },
+  { id: 3, title: 'Basketball Practice', time: '6:00 PM - 7:30 PM', coach: 'John Smith', location: 'Court B', daysTill: 2 }
 ];
 
 // Mock payment history
 const paymentHistory = [
-  { id: 1, date: '2025-06-01', amount: '₹5000', description: 'June Cricket Fees', status: 'paid' },
-  { id: 2, date: '2025-05-15', amount: '₹3500', description: 'Swimming Package', status: 'paid' },
-  { id: 3, date: '2025-05-01', amount: '₹5000', description: 'May Cricket Fees', status: 'paid' },
-  { id: 4, date: '2025-04-15', amount: '₹4000', description: 'Tennis Coaching', status: 'paid' }
+  { id: 1, date: '2024-06-01', amount: '$150', description: 'June Football Fees', status: 'paid' },
+  { id: 2, date: '2024-05-15', amount: '$120', description: 'Swimming Session Package', status: 'paid' },
+  { id: 3, date: '2024-05-01', amount: '$150', description: 'May Football Fees', status: 'paid' },
+  { id: 4, date: '2024-04-15', amount: '$80', description: 'Basketball Training', status: 'paid' }
 ];
 
 const ParentDashboard = () => {
@@ -221,11 +221,11 @@ const ParentDashboard = () => {
                 <CardContent>
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
                     <div>
-                      <h3 className="font-semibold">July Cricket Fees</h3>
-                      <p className="text-sm text-gray-500">Due on July 1, 2025</p>
+                      <h3 className="font-semibold">June Football Fees</h3>
+                      <p className="text-sm text-gray-500">Due on June 15, 2024</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold">₹5000.00</p>
+                      <p className="font-bold">$150.00</p>
                       <Badge variant="destructive">Pending</Badge>
                     </div>
                   </div>
@@ -307,7 +307,7 @@ const ParentDashboard = () => {
           <TabsContent value="payments" className="space-y-4">
             <PaymentCard 
               childName={childData.name}
-              pendingFees={5000}
+              pendingFees={150}
             />
             
             <Card>

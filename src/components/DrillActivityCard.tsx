@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, Clock } from 'lucide-react';
 
-interface DrillActivity {
+export interface DrillActivity {
   id: number;
   title: string;
   description: string;

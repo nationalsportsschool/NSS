@@ -85,7 +85,7 @@ const Index = () => {
 
       // Redirect based on user type
       if (selectedRole === 'admin') {
-        navigate('/admin/dashboard');
+        navigate('/admin/analytics');
       } else if (selectedRole === 'coach') {
         navigate('/coach/dashboard');
       } else if (selectedRole === 'parent') {
