@@ -55,7 +55,6 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-
 }
 
 @layer base {
@@ -66,38 +65,5 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Poppins', sans-serif;
-    background-color: white !important;
-    color: #1a1a1a !important;
-  }
-  
-  /* Force light mode for all elements */
-  html {
-    color-scheme: light !important;
-  }
-  
-  /* Ensure no dark mode classes are applied */
-  .dark {
-    display: none !important;
-  }
-  
-  /* Force light backgrounds for all major elements */
-  * {
-    background-color: inherit;
-  }
-  
-  /* Ensure cards and containers stay white */
-  .bg-background,
-  .bg-card,
-  [data-theme="dark"] {
-    background-color: white !important;
-    color: #1a1a1a !important;
-  }
-  
-  /* Override any potential dark mode styles */
-  html.dark,
-  [data-theme="dark"],
-  .dark-mode {
-    background-color: white !important;
-    color: #1a1a1a !important;
   }
 }

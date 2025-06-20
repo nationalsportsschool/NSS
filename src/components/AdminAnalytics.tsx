@@ -233,184 +233,115 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
       title="Analytics Dashboard" 
       userType="admin" 
       currentPath="/admin/analytics"
-    >      {/* Date Range Selector and Export Controls */}
-      <div className="flex flex-col gap-4 mb-6">
+    >
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold">Performance Overview</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">Analyze your academy's key metrics and trends</p>
+          <h2 className="text-2xl font-bold">Performance Overview</h2>
+          <p className="text-sm text-muted-foreground">Analyze your academy's key metrics and trends.</p>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
-          <div className="flex bg-muted rounded-md overflow-hidden order-2 sm:order-1">
-            {(['week', 'month', 'quarter', 'year'] as const).map((range) => (
-              <Button 
-                key={range}
-                variant={selectedDateRange === range ? "default" : "ghost"}
-                size="sm"
-                onClick={() => handleDateRangeChange(range)}
-                className="rounded-none h-8 px-2 sm:px-3 text-xs sm:text-sm flex-1 sm:flex-initial"
-              >
-                {range.charAt(0).toUpperCase() + range.slice(1)}
-              </Button>
-            ))}
-          </div>
-          
+        <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                size="sm" 
-                className="bg-green-600 hover:bg-green-700 h-8 order-1 sm:order-2 text-xs sm:text-sm"
-              >
-                <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <Button variant="outline" className="w-full sm:w-auto">
+                <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => {
-                setExportFormat('pdf');
-                handleExportReport();
-              }}>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
                 <FileType className="h-4 w-4 mr-2" /> 
                 Export as PDF
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                setExportFormat('csv');
-                handleExportReport();
-              }}>
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
                 <FileType className="h-4 w-4 mr-2" /> 
                 Export as CSV
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      </div>
+
+      {/* Key Metrics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {/* Revenue Card */}
-        <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Total Revenue</p>
-                {isLoading ? (
-                  <Skeleton className="h-6 sm:h-8 w-20 sm:w-28 mt-1" />
-                ) : (
-                  <div className="text-lg sm:text-2xl font-bold truncate">₹{totalRevenue.toLocaleString('en-IN')}</div>
-                )}
-                <div className="flex items-center text-xs text-green-600 mt-1">
-                  <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                  <span className="truncate">+{revenueGrowth}% growth</span>
-                </div>
-              </div>
-              <div className="rounded-full p-2 sm:p-3 bg-red-100 flex-shrink-0">
-                <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-red-600" />
-              </div>
-            </div>
+        <Card className="shadow-sm">
+          <CardHeader className="p-4 flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <IndianRupee className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            {isLoading ? <Skeleton className="h-8 w-2/3" /> : <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString('en-IN')}</div>}
+            <p className="text-xs text-muted-foreground">+{revenueGrowth}% from last month</p>
           </CardContent>
         </Card>
 
         {/* Students Card */}
-        <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Total Students</p>
-                {isLoading ? (
-                  <Skeleton className="h-6 sm:h-8 w-16 sm:w-20 mt-1" />
-                ) : (
-                  <div className="text-lg sm:text-2xl font-bold">{totalStudents}</div>
-                )}
-                <div className="flex items-center text-xs text-green-600 mt-1">
-                  <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                  <span className="truncate">+12% increase</span>
-                </div>
-              </div>
-              <div className="rounded-full p-2 sm:p-3 bg-blue-100 flex-shrink-0">
-                <Users className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
-              </div>
-            </div>
+        <Card className="shadow-sm">
+          <CardHeader className="p-4 flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{totalStudents}</div>}
+            <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
 
         {/* Attendance Card */}
-        <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Attendance Rate</p>
-                {isLoading ? (
-                  <Skeleton className="h-6 sm:h-8 w-12 sm:w-16 mt-1" />
-                ) : (
-                  <div className="text-lg sm:text-2xl font-bold">{avgAttendance}%</div>
-                )}
-                <div className="flex items-center text-xs text-green-600 mt-1">
-                  <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                  <span className="truncate">+3.2% this week</span>
-                </div>
-              </div>
-              <div className="rounded-full p-2 sm:p-3 bg-green-100 flex-shrink-0">
-                <Activity className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
-              </div>
-            </div>
+        <Card className="shadow-sm">
+          <CardHeader className="p-4 flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{avgAttendance}%</div>}
+            <p className="text-xs text-muted-foreground">+3.2% from last week</p>
           </CardContent>
         </Card>
 
-        {/* Coach Card */}
-        <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">Coaches</p>
-                {isLoading ? (
-                  <Skeleton className="h-6 sm:h-8 w-12 sm:w-16 mt-1" />
-                ) : (
-                  <div className="text-lg sm:text-2xl font-bold">{totalCoaches}</div>
-                )}
-                <div className="flex items-center text-xs text-green-600 mt-1">
-                  <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                  <span className="truncate">+2 this month</span>
-                </div>
-              </div>
-              <div className="rounded-full p-2 sm:p-3 bg-amber-100 flex-shrink-0">
-                <User className="h-4 w-4 sm:h-6 sm:w-6 text-amber-600" />
-              </div>
-            </div>
+        {/* Coaches Card */}
+        <Card className="shadow-sm">
+          <CardHeader className="p-4 flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Coaches</CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{totalCoaches}</div>}
+            <p className="text-xs text-muted-foreground">+2 new coaches this month</p>
           </CardContent>
         </Card>
-      </div>      {/* Analytics Tabs */}
+      </div>
+
+      {/* Analytics Tabs */}
       <Tabs defaultValue="revenue" className="space-y-4">
-        <div className="overflow-x-auto">
-          <TabsList className="grid w-full grid-cols-4 min-w-[320px] max-w-full sm:max-w-2xl">
-            <TabsTrigger value="revenue" className="text-xs sm:text-sm px-2 sm:px-4">Revenue</TabsTrigger>
-            <TabsTrigger value="students" className="text-xs sm:text-sm px-2 sm:px-4">Students</TabsTrigger>
-            <TabsTrigger value="attendance" className="text-xs sm:text-sm px-2 sm:px-4">Attendance</TabsTrigger>
-            <TabsTrigger value="performance" className="text-xs sm:text-sm px-2 sm:px-4">Performance</TabsTrigger>
+        <div className="overflow-x-auto pb-2">
+          <TabsList>
+            <TabsTrigger value="revenue">Revenue</TabsTrigger>
+            <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
           </TabsList>
-        </div>        {/* Revenue Analytics */}
+        </div>
+
+        {/* Revenue Analytics */}
         <TabsContent value="revenue" className="space-y-4">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">Revenue Trend</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Monthly revenue growth over time</CardDescription>
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+            <Card className="lg:col-span-4">
+              <CardHeader>
+                <CardTitle>Revenue Trend</CardTitle>
+                <CardDescription>Monthly revenue growth over the last 6 months.</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-6 pt-0">
-                {isLoading ? (
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
-                ) : (
+              <CardContent className="pl-2 pr-4 sm:pr-6">
+                {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
                   <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={revenueData}>
+                      <AreaChart data={revenueData} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" fontSize={12} />
-                        <YAxis fontSize={12} />
+                        <XAxis dataKey="month" fontSize={11} tickMargin={5} />
+                        <YAxis fontSize={11} tickMargin={5} tickFormatter={(value) => `₹${Number(value) / 1000}k`} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Area 
-                          type="monotone" 
-                          dataKey="revenue" 
-                          stroke="#ef4444" 
-                          fill="#ef4444" 
-                          fillOpacity={0.3}
-                        />
+                        <Area type="monotone" dataKey="revenue" stroke="#ef4444" fill="#ef4444" fillOpacity={0.2} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -418,79 +349,47 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">Revenue by Sport</CardTitle>
+            <Card className="lg:col-span-3">
+              <CardHeader>
+                <CardTitle>Revenue by Sport</CardTitle>
+                <CardDescription>Revenue distribution across top sports.</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-6 pt-0">
-                <ChartContainer config={{}} className="mx-auto aspect-square max-h-[250px] sm:max-h-[300px]">
-                  <PieChart>
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent hideLabel />}
-                    />
-                    <Pie
-                      data={revenueBySport}
-                      dataKey="revenue"
-                      nameKey="sport"
-                      innerRadius={40}
-                      strokeWidth={3}
-                      labelLine={false}
-                      label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
-                        const RADIAN = Math.PI / 180;
-                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                        return (
-                          <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={12}>
-                            {`${(percent * 100).toFixed(0)}%`}
-                          </text>
-                        );
-                      }}
-                    >
-                      {revenueBySport.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ChartContainer>
+              <CardContent>
+                {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
+                  <ChartContainer config={{}} className="mx-auto aspect-square max-h-[250px] sm:max-h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                        <Pie data={revenueBySport} dataKey="revenue" nameKey="sport" innerRadius="40%" strokeWidth={2} labelLine={false} label={({ percent }) => `${(percent * 100).toFixed(0)}%`}>
+                          {revenueBySport.map((entry) => <Cell key={entry.sport} fill={entry.color} />)}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                )}
               </CardContent>
-              <CardFooter className="flex-col gap-2 text-xs sm:text-sm pt-0">
-                <div className="flex items-center gap-2 font-medium leading-none">
-                  Trending up by 5.2% this month <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                </div>
-                <div className="leading-none text-muted-foreground text-center">
-                  Showing total revenue by sports category
-                </div>
-              </CardFooter>
             </Card>
           </div>
-        </TabsContent>        {/* Student Analytics */}
+        </TabsContent>
+
+        {/* Student Analytics */}
         <TabsContent value="students" className="space-y-4">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">Student Growth</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Student enrollment over time</CardDescription>
+              <CardHeader>
+                <CardTitle>Student Growth</CardTitle>
+                <CardDescription>Student enrollment over time.</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-6 pt-0">
-                {isLoading ? (
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
-                ) : (
+              <CardContent className="pl-2 pr-4 sm:pr-6">
+                {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
                   <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={revenueData}>
+                      <LineChart data={revenueData} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" fontSize={12} />
-                        <YAxis fontSize={12} />
+                        <XAxis dataKey="month" fontSize={11} tickMargin={5} />
+                        <YAxis fontSize={11} tickMargin={5} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line 
-                          type="monotone" 
-                          dataKey="students" 
-                          stroke="#3b82f6" 
-                          strokeWidth={2}
-                          dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
-                        />
+                        <Line type="monotone" dataKey="students" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4, fill: '#3b82f6' }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -499,22 +398,20 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
             </Card>
 
             <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">Students by Sport</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Distribution of students across sports</CardDescription>
+              <CardHeader>
+                <CardTitle>Students by Sport</CardTitle>
+                <CardDescription>Distribution of students across sports.</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-6 pt-0">
-                {isLoading ? (
-                  <Skeleton className="h-[250px] sm:h-[300px] w-full" />
-                ) : (
+              <CardContent className="pl-2 pr-4 sm:pr-6">
+                {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
                   <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={sportDistribution}>
+                      <BarChart data={sportDistribution} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="sport" fontSize={11} />
-                        <YAxis fontSize={12} />
+                        <XAxis dataKey="sport" fontSize={11} tickMargin={5} />
+                        <YAxis fontSize={11} tickMargin={5} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="students" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                        <Bar dataKey="students" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -526,61 +423,33 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
 
         {/* Attendance Analytics */}
         <TabsContent value="attendance" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
                     <CardTitle>Attendance Trends</CardTitle>
-                    <CardDescription>
-                      {attendanceView === 'student' ? 'Daily student attendance patterns' : 'Daily coach attendance patterns'}
-                    </CardDescription>
+                    <CardDescription>Daily attendance patterns.</CardDescription>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={attendanceView === 'coach'}
-                        onCheckedChange={(checked) => setAttendanceView(checked ? 'coach' : 'student')}
-                      />
-                      <span className="text-sm font-medium">
-                        {attendanceView === 'student' ? 'Students' : 'Coaches'}
-                      </span>
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium">Student</span>
+                    <Switch checked={attendanceView === 'coach'} onCheckedChange={(c) => setAttendanceView(c ? 'coach' : 'student')} />
+                    <span className="text-sm font-medium">Coach</span>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-[300px] w-full" />
-                ) : (
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+              <CardContent className="pl-2 pr-4 sm:pr-6">
+                {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
+                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={attendanceView === 'student' ? attendanceData : coachAttendanceData}>
+                      <AreaChart data={attendanceView === 'student' ? attendanceData : coachAttendanceData} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
+                        <XAxis dataKey="date" fontSize={11} tickMargin={5} />
+                        <YAxis fontSize={11} tickMargin={5} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Area 
-                          type="monotone" 
-                          dataKey="present" 
-                          stackId="1"
-                          stroke="#10b981" 
-                          fill="#10b981" 
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="late" 
-                          stackId="1"
-                          stroke="#f59e0b" 
-                          fill="#f59e0b" 
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="absent" 
-                          stackId="1"
-                          stroke="#ef4444" 
-                          fill="#ef4444" 
-                        />
+                        <Area type="monotone" dataKey="present" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
+                        <Area type="monotone" dataKey="late" stackId="1" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
+                        <Area type="monotone" dataKey="absent" stackId="1" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -590,140 +459,72 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
 
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {attendanceView === 'student' ? 'Student' : 'Coach'} Attendance Summary
-                </CardTitle>
-                <CardDescription>
-                  Individual attendance records and rates
-                </CardDescription>
+                <CardTitle>{attendanceView === 'student' ? 'Student' : 'Coach'} Attendance Summary</CardTitle>
+                <CardDescription>Top 10 individual attendance records.</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
-                  <div className="space-y-4">
-                    {Array(5).fill(0).map((_, i) => (
-                      <Skeleton key={i} className="h-16 w-full" />
-                    ))}
+                  <div className="space-y-2">
+                    {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                   </div>
                 ) : (
-                  <div className="space-y-4 max-h-[300px] overflow-y-auto">
-                    {(attendanceView === 'student' ? studentAttendanceDetails : coachAttendanceDetails)
-                      .slice(0, 10)
-                      .map((person, index) => (
-                        <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="space-y-1">
-                            <h3 className="font-semibold text-sm">{person.name}</h3>
-                            <div className="flex items-center space-x-2">
-                              <Badge variant="outline" className="text-xs">
-                                {person.sport}
-                              </Badge>
-                              {'avgHours' in person && (
-                                <div className="flex items-center space-x-1 text-xs text-gray-500">
-                                  <Clock className="h-3 w-3" />
-                                  <span>{person.avgHours}h avg</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right space-y-1">
-                            <div className="flex items-center space-x-3 text-xs">
-                              <div className="flex items-center space-x-1">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <span>{person.present}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                                <span>{person.late}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                <span>{person.absent}</span>
-                              </div>
-                            </div>
-                            <div className="text-sm font-medium">
-                              {person.attendanceRate}% attendance
-                            </div>
+                  <div className="space-y-2 max-h-[280px] overflow-y-auto pr-2">
+                    {(attendanceView === 'student' ? studentAttendanceDetails : coachAttendanceDetails).slice(0, 10).map((person, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 border rounded-md">
+                        <div className="flex items-center gap-3">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: person.attendanceRate > 90 ? '#10b981' : person.attendanceRate > 75 ? '#f59e0b' : '#ef4444' }}></div>
+                          <div>
+                            <p className="font-medium text-sm">{person.name}</p>
+                            <p className="text-xs text-muted-foreground">{person.sport}</p>
                           </div>
                         </div>
-                      ))
-                    }
+                        <div className="text-right">
+                          <p className="font-mono text-sm font-medium">{person.attendanceRate}%</p>
+                          <p className="text-xs text-muted-foreground">{person.present}/{person.present + person.absent + person.late}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
             </Card>
-          </div>        </TabsContent>        {/* Performance Analytics */}
+          </div>
+        </TabsContent>
+
+        {/* Performance Analytics */}
         <TabsContent value="performance" className="space-y-4">
           <Card>
-            <CardHeader className="pb-3 sm:pb-6">
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <div>
-                  <CardTitle className="text-base sm:text-lg">Coach Performance</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Coach effectiveness metrics and student assignments</CardDescription>
-                </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <Button onClick={handleAddCoach} size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm">
-                    <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                    Add Coach
-                  </Button>
-                  <Button
-                    onClick={() => setShowCoachManagement(!showCoachManagement)}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs sm:text-sm"
-                  >
-                    {showCoachManagement ? 'View Performance' : 'Manage Students'}
-                  </Button>
-                </div>
-              </div>
+            <CardHeader>
+              <CardTitle>Coach Performance</CardTitle>
+              <CardDescription>Coach effectiveness metrics and student assignments.</CardDescription>
             </CardHeader>
-            <CardContent className="p-3 sm:p-6 pt-0">
-              {isLoading ? (
-                <div className="space-y-3 sm:space-y-4">
-                  {Array(5).fill(0).map((_, i) => (
-                    <Skeleton key={i} className="h-12 sm:h-16 w-full" />
-                  ))}
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input placeholder="Search coaches..." className="max-w-xs" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                <Button><UserPlus className="h-4 w-4 mr-2" />Add Coach</Button>
+              </div>
+              <div className="rounded-md border">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 p-4 font-medium text-muted-foreground text-sm border-b">
+                  <div className="col-span-2 sm:col-span-1">Coach</div>
+                  <div className="hidden sm:block">Sport</div>
+                  <div className="text-right">Students</div>
+                  <div className="hidden sm:block text-right">Retention</div>
+                  <div className="text-right">Rating</div>
                 </div>
-              ) : (
-                <div className="space-y-3 sm:space-y-4 max-h-[350px] sm:max-h-[400px] overflow-y-auto">
-                  <div className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                    Showing 8 of {coachPerformance.length} coaches
-                  </div>
-                  {coachPerformance.slice(0, 8).map((coach, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-xs sm:text-sm truncate">{coach.name}</h3>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {coach.sport}
-                          </Badge>
-                          <div className="text-xs text-gray-500">
-                            {coach.students} students
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col lg:flex-row items-end lg:items-center gap-2 lg:gap-4 xl:gap-6 flex-shrink-0">
-                        <div className="text-xs sm:text-sm text-center lg:text-left">
-                          <div className="font-medium">{coach.rating}/5.0</div>
-                          <div className="text-xs text-gray-500">Rating</div>
-                        </div>
-                        <div className="text-xs sm:text-sm text-center lg:text-left">
-                          <div className="font-medium">{coach.retention}%</div>
-                          <div className="text-xs text-gray-500">Retention</div>
-                        </div>
-                        {showCoachManagement && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleAssignStudents(coach.id)}
-                            className="text-xs px-2 py-1"
-                          >
-                            Assign
-                          </Button>
-                        )}
+                <div className="divide-y">
+                  {coachPerformance.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(coach => (
+                    <div key={coach.id} className="grid grid-cols-3 sm:grid-cols-5 gap-4 p-4 items-center text-sm">
+                      <div className="col-span-2 sm:col-span-1 font-medium">{coach.name}</div>
+                      <div className="hidden sm:block text-muted-foreground">{coach.sport}</div>
+                      <div className="text-right">{coach.students}</div>
+                      <div className="hidden sm:block text-right">{coach.retention}%</div>
+                      <div className="text-right flex items-center justify-end gap-1 text-amber-500">
+                        <span className="font-semibold">{coach.rating.toFixed(1)}</span>
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

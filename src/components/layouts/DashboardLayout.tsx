@@ -43,7 +43,8 @@ const DashboardLayout = ({
   title, 
   userType,
   currentPath
-}: DashboardLayoutProps) => {  const [isCommandOpen, setIsCommandOpen] = useState(false);
+}: DashboardLayoutProps) => {
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
   const navigate = useNavigate();
 
   // Define navigation items based on user type
@@ -56,10 +57,6 @@ const DashboardLayout = ({
       return [
         { label: 'Analytics', icon: <BarChart3 className="h-4 w-4" />, path: '/admin/analytics' },
         { label: 'Dashboard', icon: <Home className="h-4 w-4" />, path: '/admin/dashboard' },
-        { label: 'Students', icon: <Users className="h-4 w-4" />, path: '/admin/students' },
-        { label: 'Payments', icon: <CreditCard className="h-4 w-4" />, path: '/admin/payments' },
-        { label: 'Schedule', icon: <Calendar className="h-4 w-4" />, path: '/admin/schedule' },
-        ...commonItems
       ];
     } else if (userType === 'coach') {
       return [
@@ -204,13 +201,6 @@ const DashboardLayout = ({
                 <kbd className="hidden md:inline-flex h-5 select-none items-center gap-0.5 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-70">
                   <span>⌘</span>K
                 </kbd>
-              </Button>
-            )}
-              
-            {/* Theme Toggle - only show for non-admin users */}
-            {userType !== 'admin' && (
-              <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
             )}
             

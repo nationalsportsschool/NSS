@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { SimpleToaster } from "@/components/SimpleToaster";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -50,32 +51,34 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <SimpleToaster />
-          <Toaster />
-          
-          {/* Offline Indicator */}
-          {!isOnline && (
-            <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center text-sm py-1 z-50">
-              You're offline. Using cached data.
-            </div>
-          )}
-          
-          {/* PWA Install Prompt */}
-          <PWAInstallPrompt />
-          
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            <Route path="/coach/dashboard" element={<CoachDashboard />} />
-            <Route path="/parent/dashboard" element={<ParentDashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </QueryClientProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <SimpleToaster />
+            <Toaster />
+            
+            {/* Offline Indicator */}
+            {!isOnline && (
+              <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center text-sm py-1 z-50">
+                You're offline. Using cached data.
+              </div>
+            )}
+            
+            {/* PWA Install Prompt */}
+            <PWAInstallPrompt />
+            
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/analytics" element={<AdminAnalytics />} />
+              <Route path="/coach/dashboard" element={<CoachDashboard />} />
+              <Route path="/parent/dashboard" element={<ParentDashboard />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };
