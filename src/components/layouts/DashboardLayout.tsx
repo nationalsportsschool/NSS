@@ -30,6 +30,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -46,6 +47,7 @@ const DashboardLayout = ({
 }: DashboardLayoutProps) => {
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Define navigation items based on user type
   const getNavigationItems = () => {
@@ -54,6 +56,11 @@ const DashboardLayout = ({
     ];
     
     if (userType === 'admin') {
+      if (isMobile) {
+        return [
+          { label: 'Dashboard', icon: <Home className="h-4 w-4" />, path: '/admin/dashboard' },
+        ];
+      }
       return [
         { label: 'Analytics', icon: <BarChart3 className="h-4 w-4" />, path: '/admin/analytics' },
         { label: 'Dashboard', icon: <Home className="h-4 w-4" />, path: '/admin/dashboard' },
@@ -113,51 +120,53 @@ const DashboardLayout = ({
         <div className="flex h-16 items-center px-4 md:px-6">
           <div className="flex items-center gap-2">
             {/* Mobile Menu */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-60 sm:w-72 pr-0">
-                <div className="flex flex-col h-full p-4">
-                  <div className="flex items-center mb-8 pl-4">
-                    <img 
-                      src="/lovable-uploads/33900580-8f8e-4c8d-b6d6-511af21db8ca.png" 
-                      alt="National Sports School Logo" 
-                      className="h-10 w-auto mr-2 object-contain"
-                    />
-                    <h2 className="text-lg font-bold">NSS Portal</h2>
-                  </div>
-                  <nav className="space-y-2 flex-1">
-                    {navigationItems.map((item) => (
-                      <Button
-                        key={item.path}
-                        variant={currentPath === item.path ? "secondary" : "ghost"}
-                        className={cn(
-                          "w-full justify-start gap-3 pl-4 transition-all", 
-                          currentPath === item.path ? "" : "hover:bg-gray-100"
-                        )}
-                        onClick={() => navigate(item.path)}
-                      >
-                        {item.icon}
-                        {item.label}
-                      </Button>
-                    ))}
-                  </nav>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start gap-3 pl-4 mt-auto text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => navigate('/')}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Log Out
+            {!(isMobile && userType === 'admin') && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Toggle menu</span>
                   </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
-              {/* Brand Logo (Always visible) */}
+                </SheetTrigger>
+                <SheetContent side="left" className="w-60 sm:w-72 pr-0">
+                  <div className="flex flex-col h-full p-4">
+                    <div className="flex items-center mb-8 pl-4">
+                      <img 
+                        src="/lovable-uploads/33900580-8f8e-4c8d-b6d6-511af21db8ca.png" 
+                        alt="National Sports School Logo" 
+                        className="h-10 w-auto mr-2 object-contain"
+                      />
+                      <h2 className="text-lg font-bold">NSS Portal</h2>
+                    </div>
+                    <nav className="space-y-2 flex-1">
+                      {navigationItems.map((item) => (
+                        <Button
+                          key={item.path}
+                          variant={currentPath === item.path ? "secondary" : "ghost"}
+                          className={cn(
+                            "w-full justify-start gap-3 pl-4 transition-all", 
+                            currentPath === item.path ? "" : "hover:bg-gray-100"
+                          )}
+                          onClick={() => navigate(item.path)}
+                        >
+                          {item.icon}
+                          {item.label}
+                        </Button>
+                      ))}
+                    </nav>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start gap-3 pl-4 mt-auto text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => navigate('/')}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Log Out
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+            {/* Brand Logo (Always visible) */}
             <div className="flex items-center gap-2" onClick={() => navigate('/')} role="button">
               <img 
                 src="/lovable-uploads/33900580-8f8e-4c8d-b6d6-511af21db8ca.png" 
@@ -204,63 +213,63 @@ const DashboardLayout = ({
               </Button>
             )}
             
-            {/* Notifications - Hide for admin*/}
+            {/* Notifications */}
             {userType !== 'admin' && (
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+                <span className="sr-only">Notifications</span>
               </Button>
             )}
-            
-            {/* User Menu */}
+
+            {/* User Profile Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src="" alt="User" />
-                    <AvatarFallback>
-                      {userType === 'admin' ? 'AD' : userType === 'coach' ? 'CO' : 'PA'}
-                    </AvatarFallback>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    {userType !== 'admin' && <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User avatar" />}
+                    <AvatarFallback>AD</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">Admin User</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      admin@nss.com
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate(`/${userType}/profile`)}>
-                    Profile
-                    <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate(`/${userType}/settings`)}>
-                    Settings
-                    <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/')} className="text-red-600">
-                  Log out
-                  <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+                <DropdownMenuItem onClick={() => navigate('/')}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </header>
-      
-      {/* Page Content */}
-      <div className="flex-1 container max-w-7xl mx-auto px-4 py-6">
-        {/* Breadcrumbs and Page Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-6 lg:p-8">
+        <div className="mx-auto max-w-7xl">
+          {/* Breadcrumbs and Title */}
           <div>
             <Breadcrumb className="mb-2">
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink 
-                    onClick={() => navigate(`/${userType}/dashboard`)}
-                    className={colors.subtle}
-                  >
-                    {userType === 'admin' ? 'Admin' : userType === 'coach' ? 'Coach' : 'Parent'}
+                  <BreadcrumbLink asChild>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate(`/${userType}/dashboard`); }}>
+                      {userType === 'admin' ? 'Admin' : userType === 'coach' ? 'Coach' : 'Parent'}
+                    </a>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className={colors.separator} />
@@ -270,25 +279,25 @@ const DashboardLayout = ({
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </BreadcrumbList>
-            </Breadcrumb>            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            </Breadcrumb>            
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
               {title}
             </h1>
           </div>
+          
+          {/* Page Content */}
+          <div className="mt-6">
+            {children}
+          </div>
         </div>
-        
-        {/* Main Content */}
-        <div className="relative">
-          {children}
-        </div>
-      </div>
-      
+      </main>
+
       {/* Command Menu component */}
       {isCommandOpen && (
-        <CommandMenu 
-          isOpen={isCommandOpen} 
-          setIsOpen={setIsCommandOpen} 
+        <CommandMenu
+          isOpen={isCommandOpen}
+          onClose={() => setIsCommandOpen(false)}
           userType={userType}
-          navigationItems={navigationItems}
         />
       )}
     </div>

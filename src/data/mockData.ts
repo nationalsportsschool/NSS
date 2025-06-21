@@ -3,26 +3,37 @@ import { DrillActivity } from '@/components/DrillActivityCard';
 
 // Mock data generation functions
 export const generateMockStudents = () => {
-  const students = [];
-  const sports = ['Cricket', 'Football', 'Tennis', 'Athletics', 'Swimming'];
-  const groups = ['Beginners', 'Intermediate', 'Advanced'];
+  const students = [];  const sports = ['Cricket', 'Football', 'Tennis', 'Athletics', 'Swimming', 'Basketball'];
+  const groups = ['Beginners', 'Intermediate', 'Advanced', 'Professional'];
   const paymentStatuses = ['paid', 'not_paid', 'upcoming'];
   const firstNames = ['Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Reyansh', 'Ayaan', 'Krishna', 'Ishaan', 'Ananya', 'Diya', 'Saanvi', 'Gauri', 'Aadhya', 'Myra', 'Pari', 'Riya', 'Aisha', 'Tara'];
   const lastNames = ['Patel', 'Sharma', 'Kumar', 'Singh', 'Gupta', 'Reddy', 'Verma', 'Das', 'Menon', 'Iyer', 'Joshi', 'Khan', 'Mehta', 'Shah', 'Nair', 'Rao', 'Pillai', 'Chopra', 'Bose', 'Malik'];
-
   for (let i = 0; i < 40; i++) {
     const firstName = firstNames[i % firstNames.length];
     const lastName = lastNames[Math.floor(i / firstNames.length)];
     const sport = sports[i % sports.length];
     const group = groups[i % groups.length];
     const paymentStatus = paymentStatuses[i % paymentStatuses.length];
+    
+    // Calculate pending amount based on sport and payment status
+    const getFeePlan = (sport: string) => {
+      if (sport === 'Tennis' || sport === 'Swimming') return { plan: 'Monthly - ₹8000', amount: 8000 };
+      if (sport === 'Football') return { plan: 'Monthly - ₹5000', amount: 5000 };
+      return { plan: 'Quarterly - ₹12000', amount: 12000 };
+    };
+    
+    const feeInfo = getFeePlan(sport);
+    const pendingAmount = paymentStatus === 'paid' ? 0 : 
+                         paymentStatus === 'upcoming' ? feeInfo.amount : 
+                         Math.floor(Math.random() * feeInfo.amount) + 1000; // Random pending for not_paid
 
     students.push({
       id: i + 1,
       name: `${firstName} ${lastName}`,
       sport,
-      feePlan: sport === 'Tennis' || sport === 'Swimming' ? 'Monthly - ₹8000' : sport === 'Football' ? 'Monthly - ₹5000' : 'Quarterly - ₹12000',
+      feePlan: feeInfo.plan,
       paymentStatus,
+      pendingAmount,
       parentContact: `+91 98${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`,
       lastPayment: new Date(2025, 0, Math.floor(Math.random() * 30) + 1).toISOString().split('T')[0],
       group

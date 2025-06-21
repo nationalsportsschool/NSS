@@ -12,6 +12,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { useToast } from '@/components/ui/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useNavigate } from 'react-router-dom';
 
 // Mock analytics data
 const revenueData = [
@@ -145,6 +147,8 @@ interface AdminAnalyticsProps {
 
 const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [attendanceView, setAttendanceView] = React.useState<'student' | 'coach'>('student');
   const [showCoachManagement, setShowCoachManagement] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
@@ -152,6 +156,12 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
   const [exportFormat, setExportFormat] = React.useState<'pdf' | 'csv'>('pdf');
   const [searchQuery, setSearchQuery] = React.useState('');
   
+  React.useEffect(() => {
+    if (isMobile) {
+      navigate('/admin/dashboard');
+    }
+  }, [isMobile, navigate]);
+
   // Simulate data loading
   React.useEffect(() => {
     const timer = setTimeout(() => {
