@@ -48,13 +48,8 @@ const DashboardLayout = ({
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-
   // Define navigation items based on user type
   const getNavigationItems = () => {
-    const commonItems = [
-      { label: 'Settings', icon: <Settings className="h-4 w-4" />, path: `/${userType}/settings` }
-    ];
-    
     if (userType === 'admin') {
       if (isMobile) {
         return [
@@ -70,7 +65,7 @@ const DashboardLayout = ({
         { label: 'Dashboard', icon: <Home className="h-4 w-4" />, path: '/coach/dashboard' },
         { label: 'Students', icon: <Users className="h-4 w-4" />, path: '/coach/students' },
         { label: 'Schedule', icon: <Calendar className="h-4 w-4" />, path: '/coach/schedule' },
-        ...commonItems
+        { label: 'Settings', icon: <Settings className="h-4 w-4" />, path: '/coach/settings' }
       ];
     }
     
@@ -78,7 +73,7 @@ const DashboardLayout = ({
       { label: 'Dashboard', icon: <Home className="h-4 w-4" />, path: '/parent/dashboard' },
       { label: 'Schedule', icon: <Calendar className="h-4 w-4" />, path: '/parent/schedule' },
       { label: 'Payments', icon: <CreditCard className="h-4 w-4" />, path: '/parent/payments' },
-      ...commonItems
+      { label: 'Settings', icon: <Settings className="h-4 w-4" />, path: '/parent/settings' }
     ];
   };
   
@@ -230,8 +225,7 @@ const DashboardLayout = ({
                     <AvatarFallback>AD</AvatarFallback>
                   </Avatar>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+              </DropdownMenuTrigger>              <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">Admin User</p>
@@ -241,13 +235,17 @@ const DashboardLayout = ({
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate(`/${userType}/settings`)}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
+                {userType !== 'admin' && (
+                  <>
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={() => navigate(`/${userType}/settings`)}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={() => navigate('/')}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
@@ -290,14 +288,13 @@ const DashboardLayout = ({
             {children}
           </div>
         </div>
-      </main>
-
-      {/* Command Menu component */}
+      </main>      {/* Command Menu component */}
       {isCommandOpen && (
         <CommandMenu
           isOpen={isCommandOpen}
-          onClose={() => setIsCommandOpen(false)}
+          setIsOpen={setIsCommandOpen}
           userType={userType}
+          navigationItems={navigationItems}
         />
       )}
     </div>

@@ -3,7 +3,7 @@ import { DateRange } from 'react-day-picker';
 import { addDays } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { UserPlus, CreditCard, MessageSquare, Calendar as CalendarIcon, Users } from 'lucide-react';
+import { UserPlus, CreditCard, Calendar as CalendarIcon, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -13,13 +13,11 @@ import StudentRegistrationForm from '@/components/StudentRegistrationForm';
 import ParentCredentialsCard from '@/components/ParentCredentialsCard';
 import StudentsTab from '@/components/admin/tabs/StudentsTab';
 import PaymentsTab from '@/components/admin/tabs/PaymentsTab';
-import WhatsAppTab from '@/components/admin/tabs/WhatsAppTab';
 import AttendanceTab from '@/components/admin/tabs/AttendanceTab';
 
 import {
   mockStudents,
   mockPaymentLogs,
-  mockWhatsAppLogs,
   mockStudentAttendance,
   mockCoachAttendance,
 } from '@/data/mockData';
@@ -110,8 +108,7 @@ const AdminDashboard = () => {
       ) : newParentCredentials ? (
         <ParentCredentialsCard credentials={newParentCredentials} onBack={() => setNewParentCredentials(null)} />
       ) : (        <>
-          <Tabs defaultValue="students" value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-            <TabsList className="grid w-full h-auto grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 p-0 bg-transparent border-none">
+          <Tabs defaultValue="students" value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">            <TabsList className="grid w-full h-auto grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 p-0 bg-transparent border-none">
               <TabsTrigger value="students" className="flex flex-row items-center justify-center gap-2 p-3 rounded-lg">
                 <Users className="h-5 w-5" />
                 <span className="text-sm font-semibold">Students</span>
@@ -119,10 +116,6 @@ const AdminDashboard = () => {
               <TabsTrigger value="payments" className="flex flex-row items-center justify-center gap-2 p-3 rounded-lg">
                 <CreditCard className="h-5 w-5" />
                 <span className="text-sm font-semibold">Payments</span>
-              </TabsTrigger>
-              <TabsTrigger value="whatsapp" className="flex flex-row items-center justify-center gap-2 p-3 rounded-lg">
-                <MessageSquare className="h-5 w-5" />
-                <span className="text-sm font-semibold">WhatsApp</span>
               </TabsTrigger>
               <TabsTrigger value="attendance" className="flex flex-row items-center justify-center gap-2 p-3 rounded-lg">
                 <CalendarIcon className="h-5 w-5" />
@@ -142,14 +135,8 @@ const AdminDashboard = () => {
           )}
             <TabsContent value="students" className="space-y-4">
               <StudentsTab students={mockStudents} />
-            </TabsContent>
-
-            <TabsContent value="payments" className="space-y-4">
+            </TabsContent>            <TabsContent value="payments" className="space-y-4">
               <PaymentsTab paymentLogs={mockPaymentLogs} />
-            </TabsContent>
-
-            <TabsContent value="whatsapp" className="space-y-4">
-              <WhatsAppTab whatsAppLogs={mockWhatsAppLogs} />
             </TabsContent>
 
             <TabsContent value="attendance" className="space-y-4">

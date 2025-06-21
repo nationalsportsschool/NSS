@@ -6,8 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Phone, Info, Search, Filter, X } from 'lucide-react';
+import { Phone, Info, Search, Filter, X, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 
 // Define the type for a single student
 type Student = {
@@ -66,7 +67,6 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
     setSelectedSport(student.sport);
     setSelectedBatch(student.group);
   };
-
   const handleSaveChanges = () => {
     // In a real app, this would make an API call to update the student
     toast({
@@ -74,6 +74,53 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
       description: `${editingStudent.name} has been assigned to ${selectedSport} - ${selectedBatch} batch.`,
     });
     setEditingStudent(null);
+  };
+
+  const handleExportToExcel = () => {
+    // Prepare data for export
+    const exportData = filteredStudents.map(student => ({
+      'Student Name': student.name,
+      'Sport': student.sport,
+      'Group': student.group,
+      'Fee Plan': student.feePlan,
+      'Payment Status': student.paymentStatus === 'paid' ? 'Paid' : 'Pending',
+      'Pending Amount (₹)': student.pendingAmount,
+      'Parent Contact': student.parentContact,
+      'Last Payment': student.lastPayment
+    }));
+
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Set column widths
+    const columnWidths = [
+      { wch: 20 }, // Student Name
+      { wch: 15 }, // Sport
+      { wch: 15 }, // Group
+      { wch: 20 }, // Fee Plan
+      { wch: 15 }, // Payment Status
+      { wch: 18 }, // Pending Amount
+      { wch: 18 }, // Parent Contact
+      { wch: 15 }  // Last Payment
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Students');
+
+    // Generate filename with current date
+    const currentDate = new Date().toISOString().split('T')[0];
+    const filename = `students_export_${currentDate}.xlsx`;
+
+    // Save file
+    XLSX.writeFile(workbook, filename);
+
+    // Show success toast
+    toast({
+      title: "Export Successful",
+      description: `Student data exported to ${filename}. ${filteredStudents.length} students included.`,
+    });
   };
 
   return (
@@ -90,8 +137,7 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
-          </div>
-          <div className="flex gap-2">
+          </div>          <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
@@ -104,6 +150,14 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
                   {[searchQuery, filterSport, filterCoach].filter(Boolean).length}
                 </Badge>
               )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleExportToExcel}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
             </Button>
             {hasActiveFilters && (
               <Button variant="ghost" onClick={clearFilters} className="flex items-center gap-2">
@@ -166,20 +220,15 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
         {filteredStudents.map((student) => (
             <Card key={student.id} className="shadow-md hover:shadow-lg transition-shadow duration-300 rounded-lg">              <CardHeader className="p-4 pb-2">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-md font-semibold">{student.name}</CardTitle>
-                  <Badge
+                  <CardTitle className="text-md font-semibold">{student.name}</CardTitle>                  <Badge
                     className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                       student.paymentStatus === 'paid' 
                         ? 'bg-green-100 text-green-800' 
-                        : student.paymentStatus === 'upcoming'
-                        ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
                     {student.paymentStatus === 'paid' 
                       ? 'Paid' 
-                      : student.paymentStatus === 'upcoming'
-                      ? 'Due'
-                      : 'Pending'
+                      : `Pending: ₹${student.pendingAmount}`
                     }
                   </Badge>
                 </div>
@@ -195,7 +244,14 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Fee Plan:</span>
                   <span>{student.feePlan}</span>
-                </div>
+                </div>                {student.pendingAmount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Pending Amount:</span>
+                    <span className="font-semibold text-red-600">
+                      ₹{student.pendingAmount}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Parent:</span>
                   <div className="flex items-center gap-2">
