@@ -14,26 +14,22 @@ export const generateMockStudents = () => {
     const sport = sports[i % sports.length];
     const group = groups[i % groups.length];
     const paymentStatus = paymentStatuses[i % paymentStatuses.length];
-    
-    // Calculate pending amount based on sport and payment status
+      // Calculate fee plan based on sport (all under ₹3000)
     const getFeePlan = (sport: string) => {
-      if (sport === 'Tennis' || sport === 'Swimming') return { plan: 'Monthly - ₹8000', amount: 8000 };
-      if (sport === 'Football') return { plan: 'Monthly - ₹5000', amount: 5000 };
-      return { plan: 'Quarterly - ₹12000', amount: 12000 };
+      if (sport === 'Tennis' || sport === 'Swimming') return { plan: '₹2800', amount: 2800 };
+      if (sport === 'Football') return { plan: '₹2500', amount: 2500 };
+      if (sport === 'Cricket') return { plan: '₹2700', amount: 2700 };
+      if (sport === 'Athletics') return { plan: '₹2200', amount: 2200 };
+      return { plan: '₹2400', amount: 2400 }; // Basketball
     };
     
-    const feeInfo = getFeePlan(sport);
-    const pendingAmount = paymentStatus === 'paid' ? 0 : 
-                         paymentStatus === 'upcoming' ? feeInfo.amount : 
-                         Math.floor(Math.random() * feeInfo.amount) + 1000; // Random pending for not_paid
-
-    students.push({
+    const feeInfo = getFeePlan(sport);    students.push({
       id: i + 1,
       name: `${firstName} ${lastName}`,
       sport,
       feePlan: feeInfo.plan,
       paymentStatus,
-      pendingAmount,
+      pendingAmount: 0, // No pending amounts as requested
       parentContact: `+91 98${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`,
       lastPayment: new Date(2025, 0, Math.floor(Math.random() * 30) + 1).toISOString().split('T')[0],
       group

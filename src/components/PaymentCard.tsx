@@ -124,7 +124,7 @@ const PaymentCard = ({ childName, pendingFees = 0 }: PaymentCardProps) => {
                 <h4 className="font-semibold text-yellow-800">Pending Fees</h4>
                 <p className="text-yellow-600">Outstanding amount to be paid</p>
               </div>
-              <div className="text-2xl font-bold text-yellow-800">${pendingFees}</div>
+              <div className="text-2xl font-bold text-yellow-800">₹{pendingFees}</div>
             </div>
           </div>
         )}

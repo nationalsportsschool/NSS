@@ -178,8 +178,8 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
                     {student.paymentStatus === 'paid' 
                       ? 'Paid' 
                       : student.paymentStatus === 'upcoming'
-                      ? `Due: ₹${student.pendingAmount}`
-                      : `Pending: ₹${student.pendingAmount}`
+                      ? 'Due'
+                      : 'Pending'
                     }
                   </Badge>
                 </div>
@@ -196,20 +196,6 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
                   <span className="text-muted-foreground">Fee Plan:</span>
                   <span>{student.feePlan}</span>
                 </div>
-                {student.pendingAmount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {student.paymentStatus === 'upcoming' ? 'Amount Due:' : 'Pending Amount:'}
-                    </span>
-                    <span className={`font-semibold ${
-                      student.paymentStatus === 'upcoming' 
-                        ? 'text-yellow-600' 
-                        : 'text-red-600'
-                    }`}>
-                      ₹{student.pendingAmount}
-                    </span>
-                  </div>
-                )}
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Parent:</span>
                   <div className="flex items-center gap-2">
