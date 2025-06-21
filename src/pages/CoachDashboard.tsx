@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 interface Student {
   id: string;
@@ -17,6 +18,11 @@ const CoachDashboard = () => {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState<Date | null>(null);
   const { toast } = useToast();
+  const [drillTitle, setDrillTitle] = useState('Passing and Dribbling');
+  const [drillImage, setDrillImage] = useState('https://images.unsplash.com/photo-1543351348-385b61a20366?w=400&h=225&fit=crop');
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [newDrillTitle, setNewDrillTitle] = useState('');
+  const [newDrillImageFile, setNewDrillImageFile] = useState<File | null>(null);
   
   const [students, setStudents] = useState<Student[]>([
     {
@@ -193,25 +199,39 @@ const CoachDashboard = () => {
       title: "Attendance Submitted",
       description: `${attendanceData.presentCount} present, ${attendanceData.absentCount} absent`,
     });
-  };  const getStatusButtons = (student: Student) => {
+  };  const handleDrillUpdate = () => {
+    if (newDrillTitle) {
+      setDrillTitle(newDrillTitle);
+    }
+    if (newDrillImageFile) {
+      setDrillImage(URL.createObjectURL(newDrillImageFile));
+    }
+    setIsUploadDialogOpen(false);
+    toast({
+      title: "Drill Updated",
+      description: "The drill activity has been successfully updated.",
+    });
+  };
+
+  const getStatusButtons = (student: Student) => {
     return (
       <div className="flex gap-2">
         <Button
           onClick={() => setStudentStatus(student.id, 'present')}
-          className={`px-4 py-1.5 rounded-md font-medium text-xs transition-all duration-200 ${
+          className={`w-24 py-2 rounded-lg font-semibold text-xs transition-all duration-300 ease-in-out ${
             student.status === 'present'
-              ? 'bg-green-600 text-white hover:bg-green-700 shadow-md'
-              : 'bg-gray-200 text-gray-700 hover:bg-green-100 hover:text-green-700 border border-gray-300'
+              ? 'bg-green-600 text-white shadow-md transform hover:scale-105'
+              : 'bg-green-100 text-green-800 hover:bg-green-200'
           }`}
         >
           Present
         </Button>
         <Button
           onClick={() => setStudentStatus(student.id, 'absent')}
-          className={`px-4 py-1.5 rounded-md font-medium text-xs transition-all duration-200 ${
+          className={`w-24 py-2 rounded-lg font-semibold text-xs transition-all duration-300 ease-in-out ${
             student.status === 'absent'
-              ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
-              : 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700 border border-gray-300'
+              ? 'bg-red-600 text-white shadow-md transform hover:scale-105'
+              : 'bg-red-100 text-red-800 hover:bg-red-200'
           }`}
         >
           Absent
@@ -223,51 +243,101 @@ const CoachDashboard = () => {
     <DashboardLayout
       title="Coach Dashboard"
       userType="coach"
-      currentPath="/coach/dashboard"    >
-      <div className="space-y-4">
+      currentPath="/coach/dashboard"
+    >
+      <div className="space-y-6">
         {/* Check In/Out Button */}
-        <Card>
+        <Card className="shadow-lg rounded-xl">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Session Status</CardTitle>
+            <CardTitle className="text-xl font-bold text-gray-700">Session Status</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent>
             {isCheckedIn ? (
               <Button
                 onClick={handleCheckOut}
-                className="w-full h-12 bg-red-600 text-white hover:bg-red-700 rounded-lg font-medium text-base"
+                className="w-full h-12 bg-red-600 text-white hover:bg-red-700 rounded-lg font-semibold text-base tracking-wide transition-transform transform hover:scale-105"
               >
                 Check Out
               </Button>
             ) : (
               <Button
                 onClick={handleCheckIn}
-                className="w-full h-12 bg-green-600 text-white hover:bg-green-700 rounded-lg font-medium text-base"
+                className="w-full h-12 bg-green-600 text-white hover:bg-green-700 rounded-lg font-semibold text-base tracking-wide transition-transform transform hover:scale-105"
               >
                 Check In
               </Button>
             )}
             {isCheckedIn && checkInTime && (
-              <p className="text-xs text-gray-600 mt-2 text-center">
+              <p className="text-sm text-gray-500 mt-3 text-center">
                 Session started at {checkInTime.toLocaleTimeString()}
               </p>
             )}
           </CardContent>
-        </Card>        {/* Students List */}
-        <Card>
+        </Card>
+
+        {/* Drill Activity Update */}
+        <Card className="shadow-lg rounded-xl">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Student Attendance</CardTitle>
+            <CardTitle className="text-xl font-bold text-gray-700">Drill Activity</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-3">
+          <CardContent>
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full h-12 bg-orange-500 text-white hover:bg-orange-600 rounded-lg font-semibold text-base tracking-wide transition-transform transform hover:scale-105">
+                  Update Drill
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Update Drill Activity</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <label htmlFor="drill-title" className="text-sm font-medium text-gray-700">Drill Title</label>
+                    <Input 
+                      id="drill-title"
+                      placeholder="Enter new drill title"
+                      value={newDrillTitle}
+                      onChange={(e) => setNewDrillTitle(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="drill-image" className="text-sm font-medium text-gray-700">Drill Image</label>
+                    <Input 
+                      id="drill-image"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => e.target.files && setNewDrillImageFile(e.target.files[0])}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleDrillUpdate}>Save Changes</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+
+        {/* Students List */}
+        <Card className="shadow-lg rounded-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold text-gray-700">Student Attendance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
               {students.map(student => (
-                <div key={student.id} className="p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={student.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900 text-base">{student.name}</div>
-                      <div className="text-xs text-gray-600 mt-1">{student.rollNumber} • {student.batch}</div>
+                      <div className="font-semibold text-gray-800">{student.name}</div>
+                      <div className="text-sm text-gray-500 mt-1">{student.rollNumber} • {student.batch}</div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex justify-end">
                     {getStatusButtons(student)}
                   </div>
                 </div>
@@ -275,10 +345,10 @@ const CoachDashboard = () => {
             </div>
             
             {/* Submit Attendance Button */}
-            <div className="mt-4 pt-3 border-t border-gray-200">
+            <div className="mt-6 pt-5 border-t border-gray-200">
               <Button
                 onClick={handleSubmitAttendance}
-                className="w-full h-10 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium text-base"
+                className="w-full h-12 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-semibold text-base tracking-wide transition-transform transform hover:scale-105"
               >
                 Submit Attendance
               </Button>
