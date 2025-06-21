@@ -1,36 +1,197 @@
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar as CalendarIcon, Users, Clock, CheckCircle, Activity, Search } from 'lucide-react';
-import CoachAttendanceCard from '@/components/CoachAttendanceCard';
-import StudentAttendanceManager from '@/components/StudentAttendanceManager';
-import ActivityUpdateCard from '@/components/ActivityUpdateCard';
-import { Input } from '@/components/ui/input';
-import DashboardLayout from '@/components/layouts/DashboardLayout';
 
-// Mock data
-const upcomingClasses = [
-  { id: 1, title: 'Beginners Soccer', time: '9:00 AM - 10:30 AM', students: 12, location: 'Field A' },
-  { id: 2, title: 'Advanced Basketball', time: '11:00 AM - 12:30 PM', students: 8, location: 'Court 2' },
-  { id: 3, title: 'Intermediate Tennis', time: '2:00 PM - 3:30 PM', students: 6, location: 'Tennis Court B' }
-];
-
-const students = [
-  { id: 1, name: 'John Smith', age: 12, sport: 'Soccer', attendance: '90%', nextClass: 'Today' },
-  { id: 2, name: 'Sarah Johnson', age: 10, sport: 'Basketball', attendance: '85%', nextClass: 'Tomorrow' },
-  { id: 3, name: 'David Wilson', age: 13, sport: 'Tennis', attendance: '78%', nextClass: 'Today' },
-  { id: 4, name: 'Emma Brown', age: 11, sport: 'Soccer', attendance: '92%', nextClass: 'Today' },
-  { id: 5, name: 'Michael Chen', age: 14, sport: 'Basketball', attendance: '88%', nextClass: 'Tomorrow' },
-  { id: 6, name: 'Lisa Garcia', age: 9, sport: 'Tennis', attendance: '80%', nextClass: 'Today' }
-];
+interface Student {
+  id: string;
+  name: string;
+  rollNumber: string;
+  batch: string;
+  status: 'present' | 'absent';
+}
 
 const CoachDashboard = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [checkInTime, setCheckInTime] = useState<Date | null>(null);
+  const { toast } = useToast();
+  
+  const [students, setStudents] = useState<Student[]>([
+    {
+      id: '1',
+      name: 'John Smith',
+      rollNumber: 'S001',
+      batch: 'Morning Batch A',
+      status: 'present'
+    }, {
+      id: '2',
+      name: 'Emma Johnson',
+      rollNumber: 'S002',
+      batch: 'Morning Batch A',
+      status: 'absent'
+    }, {
+      id: '3',
+      name: 'Michael Brown',
+      rollNumber: 'S003',
+      batch: 'Morning Batch A',
+      status: 'present'
+    }, {
+      id: '4',
+      name: 'Sarah Davis',
+      rollNumber: 'S004',
+      batch: 'Evening Batch B',
+      status: 'present'
+    }, {
+      id: '5',
+      name: 'David Wilson',
+      rollNumber: 'S005',
+      batch: 'Evening Batch B',
+      status: 'present'
+    }
+  ]);
 
+  const handleCheckIn = () => {
+    const timestamp = new Date();
+    
+    console.log('=== COACH CHECK-IN ===');
+    console.log('Check-in initiated at:', timestamp.toISOString());
+    console.log('Formatted time:', timestamp.toLocaleString());
+    
+    // Get location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp
+          };
+          
+          console.log('Geolocation successful:');
+          console.log('- Latitude:', location.latitude);
+          console.log('- Longitude:', location.longitude);
+          console.log('- Accuracy:', location.accuracy, 'meters');
+          console.log('- GPS timestamp:', new Date(location.timestamp).toISOString());
+          console.log('Complete check-in data:', {
+            checkInTime: timestamp.toISOString(),
+            location: location,
+            formattedTime: timestamp.toLocaleString(),
+            coachStatus: 'checked-in'
+          });
+        },
+        (error) => {
+          console.log('Geolocation failed:');
+          console.log('- Error code:', error.code);
+          console.log('- Error message:', error.message);
+          console.log('Check-in completed without location data');
+          console.log('Check-in data (no location):', {
+            checkInTime: timestamp.toISOString(),
+            location: null,
+            formattedTime: timestamp.toLocaleString(),
+            coachStatus: 'checked-in',
+            locationError: error.message
+          });
+        }
+      );
+    } else {
+      console.log('Geolocation not supported by browser');
+      console.log('Check-in data (no geolocation support):', {
+        checkInTime: timestamp.toISOString(),
+        location: null,
+        formattedTime: timestamp.toLocaleString(),
+        coachStatus: 'checked-in',
+        locationError: 'Geolocation not supported'
+      });
+    }
+
+    setIsCheckedIn(true);
+    setCheckInTime(timestamp);
+    console.log('Coach state updated: isCheckedIn = true');
+    console.log('======================');
+    
+    toast({
+      title: "Checked In",
+      description: "Session started",
+    });
+  };
+
+  const handleCheckOut = () => {
+    const checkOutTime = new Date();
+    const duration = checkInTime ? 
+      Math.round((checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60)) : 0;
+    
+    const sessionData = {
+      checkInTime: checkInTime?.toISOString() || null,
+      checkOutTime: checkOutTime.toISOString(),
+      durationMinutes: duration,
+      sessionDate: checkOutTime.toDateString(),
+      coachStatus: 'checked-out'
+    };
+
+    console.log('=== COACH CHECK-OUT ===');
+    console.log('Check-out initiated at:', checkOutTime.toISOString());
+    console.log('Check-in time was:', checkInTime?.toISOString() || 'Not recorded');
+    console.log('Session duration:', duration, 'minutes');
+    console.log('Session summary:', sessionData);
+    console.log('Coach state updated: isCheckedIn = false');
+    console.log('=======================');
+    
+    setIsCheckedIn(false);
+    setCheckInTime(null);
+    
+    toast({
+      title: "Checked Out",
+      description: `Session duration: ${duration} minutes`,
+    });
+  };
+
+  const toggleStudentStatus = (studentId: string) => {
+    console.log('Toggling student status for student ID:', studentId);
+    
+    setStudents(prev => prev.map(student => {
+      if (student.id === studentId) {
+        const newStatus: 'present' | 'absent' = student.status === 'present' ? 'absent' : 'present';
+        console.log(`Student ${student.name} (${student.rollNumber}) status changed from ${student.status} to ${newStatus}`);
+        return { ...student, status: newStatus };
+      }
+      return student;
+    }));
+  };
+
+  const getStatusButton = (status: string, onClick: () => void) => {
+    switch (status) {
+      case 'present':
+        return (
+          <Button 
+            onClick={onClick}
+            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg font-medium"
+          >
+            Present
+          </Button>
+        );
+      case 'absent':
+        return (
+          <Button 
+            onClick={onClick}
+            className="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg font-medium"
+          >
+            Absent
+          </Button>
+        );
+      default:
+        return (
+          <Button 
+            onClick={onClick}
+            className="bg-gray-600 text-white hover:bg-gray-700 px-4 py-2 rounded-lg font-medium"
+          >
+            Unknown
+          </Button>
+        );
+    }
+  };
   return (
     <DashboardLayout
       title="Coach Dashboard"
@@ -38,210 +199,54 @@ const CoachDashboard = () => {
       currentPath="/coach/dashboard"
     >
       <div className="space-y-6">
-        {/* Top Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">My Students</p>
-                  <div className="text-2xl font-bold">{students.length}</div>
-                  <div className="flex items-center text-xs text-green-600 mt-1">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    2 new assignments
+        {/* Check In/Out Button */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Session Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isCheckedIn ? (
+              <Button
+                onClick={handleCheckOut}
+              className="w-full h-14 bg-red-600 text-white hover:bg-red-700 rounded-lg font-medium text-lg"
+            >
+              Check Out
+            </Button>
+          ) : (
+            <Button
+              onClick={handleCheckIn}
+              className="w-full h-14 bg-green-600 text-white hover:bg-green-700 rounded-lg font-medium text-lg"
+            >              Check In
+            </Button>
+          )}
+          {isCheckedIn && checkInTime && (
+            <p className="text-sm text-gray-600 mt-3 text-center">
+              Session started at {checkInTime.toLocaleTimeString()}
+            </p>
+          )}
+          </CardContent>
+        </Card>
+
+        {/* Students List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Student Attendance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {students.map(student => (
+                <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1">                    <div className="font-medium text-gray-900">{student.name}</div>
+                    <div className="text-sm text-gray-600">{student.rollNumber} • {student.batch}</div>
+                  </div>
+                  <div className="ml-4">
+                    {getStatusButton(student.status, () => toggleStudentStatus(student.id))}
                   </div>
                 </div>
-                <div className="rounded-full p-3 bg-blue-100">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Today's Classes</p>
-                  <div className="text-2xl font-bold">{upcomingClasses.length}</div>
-                  <div className="flex items-center text-xs text-green-600 mt-1">
-                    <Clock className="h-3 w-3 mr-1" />
-                    Next in 30 minutes
-                  </div>
-                </div>
-                <div className="rounded-full p-3 bg-green-100">
-                  <CalendarIcon className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Weekly Activities</p>
-                  <div className="text-2xl font-bold">12</div>
-                  <div className="flex items-center text-xs text-green-600 mt-1">
-                    <Activity className="h-3 w-3 mr-1" />
-                    3 pending reports
-                  </div>
-                </div>
-                <div className="rounded-full p-3 bg-amber-100">
-                  <Activity className="h-6 w-6 text-amber-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Dashboard Tabs */}
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid grid-cols-1 sm:grid-cols-4 max-w-xl">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Upcoming Classes</CardTitle>
-                    <CardDescription>Your schedule for today</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {upcomingClasses.map(cls => (
-                        <div key={cls.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50">
-                          <div>
-                            <h4 className="font-semibold">{cls.title}</h4>
-                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                              <Clock className="h-3 w-3" />
-                              {cls.time}
-                            </div>
-                            <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                              <Users className="h-3 w-3" />
-                              {cls.students} students
-                            </div>
-                          </div>
-                          <Badge variant="outline">{cls.location}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Calendar</CardTitle>
-                  <CardDescription>View scheduled classes</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="border rounded-md p-3"
-                  />
-                </CardContent>
-              </Card>
+              ))}
             </div>
-
-            <ActivityUpdateCard />
-          </TabsContent>
-
-          {/* Attendance Tab */}
-          <TabsContent value="attendance" className="space-y-4">
-            <CoachAttendanceCard />
-            <StudentAttendanceManager />
-          </TabsContent>
-          
-          {/* Students Tab */}
-          <TabsContent value="students" className="space-y-4">
-            <div className="flex gap-4 mb-4">
-              <div className="relative flex-1">
-                <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                <Input 
-                  placeholder="Search students..." 
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <Users className="h-4 w-4 mr-2" />
-                View All
-              </Button>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>My Students</CardTitle>
-                <CardDescription>Students assigned to your classes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <div className="grid grid-cols-5 font-medium p-3 bg-muted text-xs md:text-sm">
-                    <div>Name</div>
-                    <div>Age</div>
-                    <div>Sport</div>
-                    <div>Attendance</div>
-                    <div className="text-right">Next Class</div>
-                  </div>
-                  <div className="divide-y">
-                    {students
-                      .filter(student => searchQuery ? student.name.toLowerCase().includes(searchQuery.toLowerCase()) : true)
-                      .map(student => (
-                        <div key={student.id} className="grid grid-cols-5 p-3 text-xs md:text-sm items-center">
-                          <div className="font-medium">{student.name}</div>
-                          <div>{student.age}</div>
-                          <div>{student.sport}</div>
-                          <div>{student.attendance}</div>
-                          <div className="text-right">
-                            <Badge variant={student.nextClass === 'Today' ? 'default' : 'outline'}>
-                              {student.nextClass}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Reports Tab */}
-          <TabsContent value="reports" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity Reports</CardTitle>
-                  <CardDescription>Recent training reports submitted</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500 mb-4">You haven't submitted any reports recently.</p>
-                  <Button>Create New Report</Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Performance Tracking</CardTitle>
-                  <CardDescription>Student progress reports</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500 mb-4">Track and document student progress over time.</p>
-                  <Button variant="outline">View Progress Reports</Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
