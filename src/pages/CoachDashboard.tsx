@@ -147,50 +147,78 @@ const CoachDashboard = () => {
       description: `Session duration: ${duration} minutes`,
     });
   };
-
-  const toggleStudentStatus = (studentId: string) => {
-    console.log('Toggling student status for student ID:', studentId);
+  const setStudentStatus = (studentId: string, status: 'present' | 'absent') => {
+    console.log('Setting student status for student ID:', studentId, 'to:', status);
     
     setStudents(prev => prev.map(student => {
       if (student.id === studentId) {
-        const newStatus: 'present' | 'absent' = student.status === 'present' ? 'absent' : 'present';
-        console.log(`Student ${student.name} (${student.rollNumber}) status changed from ${student.status} to ${newStatus}`);
-        return { ...student, status: newStatus };
+        console.log(`Student ${student.name} (${student.rollNumber}) status changed from ${student.status} to ${status}`);
+        return { ...student, status };
       }
       return student;
     }));
   };
+  const handleSubmitAttendance = () => {
+    const attendanceData = {
+      submissionTime: new Date().toISOString(),
+      sessionDate: new Date().toDateString(),
+      coachCheckIn: checkInTime?.toISOString() || null,
+      totalStudents: students.length,
+      presentCount: students.filter(s => s.status === 'present').length,
+      absentCount: students.filter(s => s.status === 'absent').length,
+      students: students.map(student => ({
+        id: student.id,
+        name: student.name,
+        rollNumber: student.rollNumber,
+        batch: student.batch,
+        status: student.status
+      }))
+    };
 
-  const getStatusButton = (status: string, onClick: () => void) => {
-    switch (status) {
-      case 'present':
-        return (
-          <Button 
-            onClick={onClick}
-            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg font-medium"
-          >
-            Present
-          </Button>
-        );
-      case 'absent':
-        return (
-          <Button 
-            onClick={onClick}
-            className="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg font-medium"
-          >
-            Absent
-          </Button>
-        );
-      default:
-        return (
-          <Button 
-            onClick={onClick}
-            className="bg-gray-600 text-white hover:bg-gray-700 px-4 py-2 rounded-lg font-medium"
-          >
-            Unknown
-          </Button>
-        );
-    }
+    console.log('=== ATTENDANCE SUBMISSION ===');
+    console.log('Submission initiated at:', new Date().toISOString());
+    console.log('Session date:', attendanceData.sessionDate);
+    console.log('Coach check-in time:', attendanceData.coachCheckIn);
+    console.log('Total students:', attendanceData.totalStudents);
+    console.log('Present students:', attendanceData.presentCount);
+    console.log('Absent students:', attendanceData.absentCount);
+    console.log('Detailed attendance:');
+    attendanceData.students.forEach(student => {
+      console.log(`- ${student.name} (${student.rollNumber}): ${student.status.toUpperCase()}`);
+    });
+    console.log('Complete attendance data:', attendanceData);
+    console.log('==============================');
+
+    toast({
+      title: "Attendance Submitted",
+      description: `${attendanceData.presentCount} present, ${attendanceData.absentCount} absent`,
+    });
+  };
+  const getStatusButtons = (student: Student) => {
+    return (
+      <div className="flex gap-3">
+        <Button
+          onClick={() => setStudentStatus(student.id, 'present')}
+          className={`px-6 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+            student.status === 'present'
+              ? 'bg-green-600 text-white hover:bg-green-700 shadow-md'
+              : 'bg-gray-200 text-gray-700 hover:bg-green-100 hover:text-green-700 border border-gray-300'
+          }`}
+        >
+          Present
+        </Button>
+        <Button
+          onClick={() => setStudentStatus(student.id, 'absent')}
+          className={`px-6 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+            student.status === 'absent'
+              ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
+              : 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700 border border-gray-300'
+          }`}
+        >
+          Absent
+        </Button>
+      </div>
+    );
   };
   return (
     <DashboardLayout
@@ -227,23 +255,34 @@ const CoachDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Students List */}
-        <Card>
+        {/* Students List */}        <Card>
           <CardHeader>
             <CardTitle>Student Attendance</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent>            <div className="space-y-4">
               {students.map(student => (
-                <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1">                    <div className="font-medium text-gray-900">{student.name}</div>
-                    <div className="text-sm text-gray-600">{student.rollNumber} • {student.batch}</div>
+                <div key={student.id} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900 text-lg">{student.name}</div>
+                      <div className="text-sm text-gray-600 mt-1">{student.rollNumber} • {student.batch}</div>
+                    </div>
                   </div>
-                  <div className="ml-4">
-                    {getStatusButton(student.status, () => toggleStudentStatus(student.id))}
+                  <div className="flex gap-3">
+                    {getStatusButtons(student)}
                   </div>
                 </div>
               ))}
+            </div>
+            
+            {/* Submit Attendance Button */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <Button
+                onClick={handleSubmitAttendance}
+                className="w-full h-12 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium text-lg"
+              >
+                Submit Attendance
+              </Button>
             </div>
           </CardContent>
         </Card>
