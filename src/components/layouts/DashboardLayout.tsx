@@ -32,10 +32,6 @@ const DashboardLayout = ({
       {/* Main Content */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-3xl">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
-            {title}
-          </h1>
-          
           {/* Page Content */}
           <div>
             {children}

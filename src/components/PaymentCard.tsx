@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { CreditCard, Wallet, Smartphone } from 'lucide-react';
+import { Wallet, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,95 +12,59 @@ const PaymentCard = ({ childName, pendingFees = 0 }: PaymentCardProps) => {
   const { toast } = useToast();
 
   const handleOpenPaymentApp = () => {
-    console.log('=== PAYMENT APP REQUEST ===');
+    const amount = pendingFees;
+    const payeeName = "National Sports School";
+    // IMPORTANT: Replace with your actual VPA/UPI ID in a real application
+    const virtualPaymentAddress = "payment@nss.ac.in"; 
+
+    // Construct the UPI URL
+    const upiUrl = `upi://pay?pa=${virtualPaymentAddress}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=Fee payment for ${encodeURIComponent(childName)}`;
+
+    console.log('=== PAYMENT INITIATION ===');
     console.log('Child:', childName);
-    console.log('Pending Fees:', pendingFees);
-    console.log('User Agent:', navigator.userAgent);
-    console.log('Platform:', navigator.platform);
+    console.log('Amount:', amount);
+    console.log('UPI URL:', upiUrl);
     console.log('Timestamp:', new Date().toISOString());
 
-    // Try to open common payment apps (PWA compatible)
-    const paymentMethods = [
-      { name: 'Google Pay', url: 'googlepay://', fallback: 'https://pay.google.com' },
-      { name: 'PayPal', url: 'paypal://', fallback: 'https://paypal.com' },
-      { name: 'Samsung Pay', url: 'samsungpay://', fallback: null },
-      { name: 'Apple Pay', url: 'applepay://', fallback: null }
-    ];
-
-    // Check if device supports payment apps
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isMobile = isAndroid || isIOS;
-
-    console.log('Device Detection:', { isAndroid, isIOS, isMobile });
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isMobile) {
-      // Try to open native payment app
-      if (isAndroid) {
-        // Try Google Pay first on Android
-        console.log('Attempting to open Google Pay...');
-        window.location.href = 'intent://pay.google.com#Intent;scheme=https;package=com.google.android.apps.nbu.paisa.user;end';
-      } else if (isIOS) {
-        // Try Apple Pay on iOS (limited support)
-        console.log('iOS detected - showing payment options...');
+      // On mobile, attempt to open the UPI deep link.
+      // This will trigger the OS to show a list of installed UPI apps.
+      window.location.href = upiUrl;
+      
+      toast({
+        title: "Opening Payment App",
+        description: "Please select an app to complete the payment.",
+      });
+
+      // Fallback for when no app can handle the UPI link
+      const timer = setTimeout(() => {
         toast({
-          title: "Payment Options",
-          description: "Please use your preferred payment app from the home screen",
+          title: "No Payment App Found",
+          description: "Could not automatically open a payment app. Please use your UPI app manually.",
+          variant: "destructive",
         });
-      }
+      }, 3000);
+
+      // If the app opens, the browser loses focus, and we can clear the fallback timer.
+      window.addEventListener('blur', () => {
+        clearTimeout(timer);
+      }, { once: true });
+
     } else {
-      // Desktop fallback - open web payment
-      console.log('Desktop detected - opening web payment...');
-      window.open('https://pay.google.com', '_blank');
+      // On desktop, UPI links are not supported. Open a fallback web payment URL.
+      // In a real-world scenario, this would be your payment gateway page.
+      console.log('Desktop detected. Opening web payment fallback.');
+      const fallbackUrl = `https://pay.google.com/gp/v/pay?pn=${encodeURIComponent(payeeName)}&pa=${virtualPaymentAddress}&am=${amount}&cu=INR`;
+      window.open(fallbackUrl, '_blank');
+      
+      toast({
+        title: "Redirecting to Payment",
+        description: "Opening a secure payment page in a new tab.",
+      });
     }
-
-    // Generic payment intent for PWA
-    try {
-      // Use Web Share API if available
-      if (navigator.share) {
-        console.log('Using Web Share API for payment...');
-        navigator.share({
-          title: 'Sports School Payment',
-          text: `Payment for ${childName} - Amount: $${pendingFees}`,
-          url: window.location.href
-        });
-      }
-    } catch (error) {
-      console.log('Web Share API error:', error);
-    }
-
-    console.log('Payment app opening attempt completed');
     console.log('===========================');
-
-    toast({
-      title: "Opening Payment App",
-      description: "Redirecting to your preferred payment method...",
-    });
-  };
-
-  const handleQuickPay = (method: string) => {
-    console.log('=== QUICK PAY SELECTED ===');
-    console.log('Payment Method:', method);
-    console.log('Child:', childName);
-    console.log('Amount:', pendingFees);
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('=========================');
-
-    // Simulate opening specific payment methods
-    switch (method) {
-      case 'gpay':
-        window.open('https://pay.google.com', '_blank');
-        break;
-      case 'paypal':
-        window.open('https://paypal.com', '_blank');
-        break;
-      case 'card':
-        toast({
-          title: "Card Payment",
-          description: "Redirecting to secure card payment...",
-        });
-        break;
-    }
   };
 
   return (
@@ -117,59 +80,34 @@ const PaymentCard = ({ childName, pendingFees = 0 }: PaymentCardProps) => {
       </div>
 
       <div className="px-5 py-5 space-y-4">
-        {pendingFees > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-semibold text-yellow-800">Pending Fees</h4>
-                <p className="text-yellow-600">Outstanding amount to be paid</p>
-              </div>
-              <div className="text-2xl font-bold text-yellow-800">₹{pendingFees}</div>
-            </div>
+        {pendingFees > 0 ? (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+            <h4 className="font-semibold text-yellow-800">Pending Fees</h4>
+            <p className="text-3xl font-bold text-yellow-900 mt-1">₹{pendingFees}</p>
+            <p className="text-xs text-yellow-700">Outstanding amount to be paid</p>
+          </div>
+        ) : (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+            <h4 className="font-semibold text-green-800">All Cleared!</h4>
+            <p className="text-sm text-green-700 mt-1">There are no pending fees. Thank you!</p>
           </div>
         )}
 
-        <div>
-          <h4 className="font-semibold text-foreground mb-3">Payment Options</h4>
-          
-          <div className="space-y-3">
+        {pendingFees > 0 && (
+          <div>
             <Button 
               onClick={handleOpenPaymentApp}
-              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base"
             >
               <Smartphone className="h-5 w-5 mr-2" />
-              Open Payment App
+              Pay Now
             </Button>
-
-            <div className="grid grid-cols-3 gap-2">
-              <Button 
-                onClick={() => handleQuickPay('gpay')}
-                variant="outline" 
-                className="h-10 text-xs"
-              >
-                Google Pay
-              </Button>
-              <Button 
-                onClick={() => handleQuickPay('paypal')}
-                variant="outline" 
-                className="h-10 text-xs"
-              >
-                PayPal
-              </Button>
-              <Button 
-                onClick={() => handleQuickPay('card')}
-                variant="outline" 
-                className="h-10 text-xs"
-              >
-                <CreditCard className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
-        </div>
+        )}
 
         <div className="text-center pt-2">
           <p className="text-xs text-muted-foreground">
-            Secure payments processed through trusted payment providers
+            Secure payments processed via UPI
           </p>
         </div>
       </div>
