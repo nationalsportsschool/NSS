@@ -108,18 +108,18 @@ const AdminDashboard = () => {
       ) : newParentCredentials ? (
         <ParentCredentialsCard credentials={newParentCredentials} onBack={() => setNewParentCredentials(null)} />
       ) : (        <>
-          <Tabs defaultValue="students" value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">            <TabsList className="grid w-full h-auto grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 p-0 bg-transparent border-none">
-              <TabsTrigger value="students" className="flex flex-row items-center justify-center gap-2 p-3 rounded-lg">
-                <Users className="h-5 w-5" />
-                <span className="text-sm font-semibold">Students</span>
+          <Tabs defaultValue="students" value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">            <TabsList className="grid w-full h-auto grid-cols-3 gap-1 sm:gap-2 md:gap-4 p-0 bg-transparent border-none">
+              <TabsTrigger value="students" className="flex flex-row items-center justify-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-lg">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm font-semibold">Students</span>
               </TabsTrigger>
-              <TabsTrigger value="payments" className="flex flex-row items-center justify-center gap-2 p-3 rounded-lg">
-                <CreditCard className="h-5 w-5" />
-                <span className="text-sm font-semibold">Payments</span>
+              <TabsTrigger value="payments" className="flex flex-row items-center justify-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-lg">
+                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm font-semibold">Payments</span>
               </TabsTrigger>
-              <TabsTrigger value="attendance" className="flex flex-row items-center justify-center gap-2 p-3 rounded-lg">
-                <CalendarIcon className="h-5 w-5" />
-                <span className="text-sm font-semibold">Attendance</span>
+              <TabsTrigger value="attendance" className="flex flex-row items-center justify-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-lg">
+                <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm font-semibold">Attendance</span>
               </TabsTrigger>
             </TabsList>
             {selectedTab === 'students' && (

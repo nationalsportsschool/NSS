@@ -69,21 +69,22 @@ const CoachDashboard = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const location = {
+          const entryLocation = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             accuracy: position.coords.accuracy,
-            timestamp: position.timestamp
+            timestamp: position.timestamp,
+            address: `Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`
           };
           
           console.log('Geolocation successful:');
-          console.log('- Latitude:', location.latitude);
-          console.log('- Longitude:', location.longitude);
-          console.log('- Accuracy:', location.accuracy, 'meters');
-          console.log('- GPS timestamp:', new Date(location.timestamp).toISOString());
+          console.log('- Latitude:', entryLocation.latitude);
+          console.log('- Longitude:', entryLocation.longitude);
+          console.log('- Accuracy:', entryLocation.accuracy, 'meters');
+          console.log('- GPS timestamp:', new Date(entryLocation.timestamp).toISOString());
           console.log('Complete check-in data:', {
             checkInTime: timestamp.toISOString(),
-            location: location,
+            entryLocation: entryLocation,
             formattedTime: timestamp.toLocaleString(),
             coachStatus: 'checked-in'
           });
@@ -95,7 +96,7 @@ const CoachDashboard = () => {
           console.log('Check-in completed without location data');
           console.log('Check-in data (no location):', {
             checkInTime: timestamp.toISOString(),
-            location: null,
+            entryLocation: null,
             formattedTime: timestamp.toLocaleString(),
             coachStatus: 'checked-in',
             locationError: error.message
@@ -106,7 +107,7 @@ const CoachDashboard = () => {
       console.log('Geolocation not supported by browser');
       console.log('Check-in data (no geolocation support):', {
         checkInTime: timestamp.toISOString(),
-        location: null,
+        entryLocation: null,
         formattedTime: timestamp.toLocaleString(),
         coachStatus: 'checked-in',
         locationError: 'Geolocation not supported'
@@ -120,7 +121,7 @@ const CoachDashboard = () => {
     
     toast({
       title: "Checked In",
-      description: "Session started",
+      description: "Session started with location tracking",
     });
   };
 
@@ -129,28 +130,69 @@ const CoachDashboard = () => {
     const duration = checkInTime ? 
       Math.round((checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60)) : 0;
     
-    const sessionData = {
-      checkInTime: checkInTime?.toISOString() || null,
-      checkOutTime: checkOutTime.toISOString(),
-      durationMinutes: duration,
-      sessionDate: checkOutTime.toDateString(),
-      coachStatus: 'checked-out'
-    };
+    // Get exit location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const exitLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp,
+            address: `Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`
+          };
+          
+          const sessionData = {
+            checkInTime: checkInTime?.toISOString() || null,
+            checkOutTime: checkOutTime.toISOString(),
+            durationMinutes: duration,
+            sessionDate: checkOutTime.toDateString(),
+            coachStatus: 'checked-out',
+            exitLocation: exitLocation
+          };
 
-    console.log('=== COACH CHECK-OUT ===');
-    console.log('Check-out initiated at:', checkOutTime.toISOString());
-    console.log('Check-in time was:', checkInTime?.toISOString() || 'Not recorded');
-    console.log('Session duration:', duration, 'minutes');
-    console.log('Session summary:', sessionData);
-    console.log('Coach state updated: isCheckedIn = false');
-    console.log('=======================');
+          console.log('=== COACH CHECK-OUT ===');
+          console.log('Check-out initiated at:', checkOutTime.toISOString());
+          console.log('Check-in time was:', checkInTime?.toISOString() || 'Not recorded');
+          console.log('Session duration:', duration, 'minutes');
+          console.log('Exit location:', exitLocation);
+          console.log('Complete session data:', sessionData);
+          console.log('Coach state updated: isCheckedIn = false');
+          console.log('=======================');
+        },
+        (error) => {
+          console.log('Exit location failed:', error.message);
+          const sessionData = {
+            checkInTime: checkInTime?.toISOString() || null,
+            checkOutTime: checkOutTime.toISOString(),
+            durationMinutes: duration,
+            sessionDate: checkOutTime.toDateString(),
+            coachStatus: 'checked-out',
+            exitLocation: null,
+            exitLocationError: error.message
+          };
+          console.log('Session data (no exit location):', sessionData);
+        }
+      );
+    } else {
+      const sessionData = {
+        checkInTime: checkInTime?.toISOString() || null,
+        checkOutTime: checkOutTime.toISOString(),
+        durationMinutes: duration,
+        sessionDate: checkOutTime.toDateString(),
+        coachStatus: 'checked-out',
+        exitLocation: null,
+        exitLocationError: 'Geolocation not supported'
+      };
+      console.log('Session data (no geolocation support):', sessionData);
+    }
     
     setIsCheckedIn(false);
     setCheckInTime(null);
     
     toast({
       title: "Checked Out",
-      description: `Session duration: ${duration} minutes`,
+      description: `Session duration: ${duration} minutes with location tracking`,
     });
   };
   const setStudentStatus = (studentId: string, status: 'present' | 'absent') => {

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon, Download, Activity } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Activity, MapPin, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type AttendanceRecord = {
@@ -18,6 +18,18 @@ type AttendanceRecord = {
   status: 'Present' | 'Absent' | 'Late' | 'Excused';
   batch: string;
   sport: string;
+  entryLocation?: {
+    lat: number;
+    lng: number;
+    address: string;
+    timestamp: string;
+  };
+  exitLocation?: {
+    lat: number;
+    lng: number;
+    address: string;
+    timestamp: string;
+  };
 };
 
 interface AttendanceTabProps {
@@ -150,8 +162,50 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({
                     </div>
                     <CardDescription>{new Date(record.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</CardDescription>
                   </CardHeader>
-                  <CardContent className="text-sm text-muted-foreground">
-                    <p>Role: <span className="font-medium text-primary">{record.batch}</span></p>
+                  <CardContent className="text-sm text-muted-foreground space-y-2">
+                    {record.entryLocation && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3 text-green-600" />
+                          <span className="text-xs font-medium text-green-700">Entry Location</span>
+                        </div>
+                        <p className="text-xs pl-4">{record.entryLocation.address}</p>
+                        <div className="flex items-center gap-1 pl-4">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs">
+                            {new Date(record.entryLocation.timestamp).toLocaleString('en-IN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              day: '2-digit',
+                              month: 'short'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {record.exitLocation && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3 text-red-600" />
+                          <span className="text-xs font-medium text-red-700">Exit Location</span>
+                        </div>
+                        <p className="text-xs pl-4">{record.exitLocation.address}</p>
+                        <div className="flex items-center gap-1 pl-4">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs">
+                            {new Date(record.exitLocation.timestamp).toLocaleString('en-IN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              day: '2-digit',
+                              month: 'short'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {!record.entryLocation && !record.exitLocation && record.status !== 'Present' && (
+                      <p className="text-xs text-muted-foreground italic">No location data available</p>
+                    )}
                   </CardContent>
                 </Card>
               ))}

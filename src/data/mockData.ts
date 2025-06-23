@@ -88,15 +88,46 @@ export const generateMockAttendance = (type: 'student' | 'coach') => {
     : ['Suresh Kumar', 'Ramesh Sharma', 'Priya Singh', 'Amit Patel'];
   const statuses: ('Present' | 'Absent' | 'Late' | 'Excused')[] = ['Present', 'Absent', 'Late', 'Excused'];
   const records = [];
+  
+  // Sample locations in Mumbai for coaches
+  const sampleLocations = [
+    { lat: 19.0760, lng: 72.8777, address: "Andheri Sports Complex" },
+    { lat: 19.0176, lng: 72.8562, address: "Marine Drive Ground" },
+    { lat: 19.1335, lng: 72.8266, address: "Kandivali Sports Center" },
+    { lat: 19.0545, lng: 72.8326, address: "Bandra Academy" },
+  ];
+  
   for (let i = 0; i < 20; i++) {
-    records.push({
+    const baseRecord = {
       id: i + 1,
       name: names[i % names.length],
       date: new Date(2025, 5, 10 + (i % 2)).toISOString().split('T')[0], // June 10 or 11, 2025
       status: statuses[i % statuses.length],
       batch: type === 'student' ? (i % 2 === 0 ? 'Soccer Training' : 'Basketball Training') : 'Senior Coach',
       sport: type === 'student' ? (i % 2 === 0 ? 'Soccer' : 'Basketball') : 'Management'
-    });
+    };
+    
+    // Add location data for coaches only
+    if (type === 'coach' && baseRecord.status === 'Present') {
+      const entryLocation = sampleLocations[i % sampleLocations.length];
+      const exitLocation = sampleLocations[(i + 1) % sampleLocations.length];
+      const entryTime = new Date(2025, 5, 10 + (i % 2), 8 + (i % 3), 30 + (i % 30));
+      const exitTime = new Date(entryTime.getTime() + (6 + (i % 3)) * 60 * 60 * 1000); // 6-8 hours later
+      
+      records.push({
+        ...baseRecord,
+        entryLocation: {
+          ...entryLocation,
+          timestamp: entryTime.toISOString()
+        },
+        exitLocation: {
+          ...exitLocation,
+          timestamp: exitTime.toISOString()
+        }
+      });
+    } else {
+      records.push(baseRecord);
+    }
   }
   return records;
 };
