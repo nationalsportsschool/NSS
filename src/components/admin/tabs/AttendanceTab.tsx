@@ -42,39 +42,43 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({
         <CardDescription>Select date range to view attendance records</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col sm:flex-row gap-4 mb-6 items-center">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 items-stretch sm:items-center">
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 id="date"
                 variant={"outline"}
                 className={cn(
-                  "w-full sm:w-[260px] justify-start text-left font-normal",
+                  "w-full sm:w-[260px] md:w-[300px] justify-start text-left font-normal min-w-0",
                   !dateRange && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
-                    </>
+                <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="truncate">
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "MMM dd")} - {format(dateRange.to, "MMM dd, y")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "MMM dd, y")
+                    )
                   ) : (
-                    format(dateRange.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Pick a date range</span>
-                )}
+                    <span>Pick a date range</span>
+                  )}
+                </span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0 max-w-[90vw]" align="start" side="bottom">
               <Calendar
                 initialFocus
                 mode="range"
                 defaultMonth={dateRange?.from}
                 selected={dateRange}
                 onSelect={setDateRange}
-                numberOfMonths={2}
+                numberOfMonths={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 2}
+                className="w-fit"
+                allowFuture={false}
               />
             </PopoverContent>
           </Popover>

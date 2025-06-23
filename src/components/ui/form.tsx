@@ -14,9 +14,6 @@ import {
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 
-console.log('Form component loaded, React version:', React.version);
-console.log('React object:', React);
-
 const Form = FormProvider
 
 type FormFieldContextValue<
@@ -36,7 +33,6 @@ const FormField = <
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
-  console.log('FormField rendering with props:', props.name);
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
@@ -48,15 +44,10 @@ const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
   
-  console.log('useFormField called, fieldContext:', fieldContext);
-  console.log('useFormField called, itemContext:', itemContext);
-  
   let formContext;
   try {
     formContext = useFormContext();
-    console.log('useFormContext successful:', !!formContext);
   } catch (error) {
-    console.error('useFormContext failed:', error);
     throw error;
   }
   

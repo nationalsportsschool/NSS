@@ -4,6 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { TrendingUp, TrendingDown, Users, DollarSign, Activity, Calendar, Download, ArrowLeft, Clock, MapPin, User, UserPlus, Filter, FileType, Search, Info, IndianRupee } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +17,9 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { useToast } from '@/components/ui/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 // Mock analytics data
 const revenueData = [
@@ -24,6 +30,19 @@ const revenueData = [
   { month: 'May', revenue: 17500, students: 68, coaches: 12 },
   { month: 'Jun', revenue: 18900, students: 72, coaches: 12 }
 ];
+
+// Coach form validation schema
+const coachFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z.string().min(10, { message: "Phone number must be at least 10 digits." }),
+  sport: z.string().min(1, { message: "Please select a sport." }),
+  experience: z.string().min(1, { message: "Please enter experience in years." }),
+  qualifications: z.string().min(5, { message: "Please enter qualifications (minimum 5 characters)." }),
+  salary: z.string().min(1, { message: "Please enter salary amount." })
+});
+
+type CoachFormValues = z.infer<typeof coachFormSchema>;
 
 const sportDistribution = [
   { sport: 'Soccer', students: 28, revenue: 8400, color: '#ef4444' },
@@ -152,9 +171,23 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
   const [attendanceView, setAttendanceView] = React.useState<'student' | 'coach'>('student');
   const [showCoachManagement, setShowCoachManagement] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
-  const [selectedDateRange, setSelectedDateRange] = React.useState<'week' | 'month' | 'quarter' | 'year'>('month');
-  const [exportFormat, setExportFormat] = React.useState<'pdf' | 'csv'>('pdf');
+  const [selectedDateRange, setSelectedDateRange] = React.useState<'week' | 'month' | 'quarter' | 'year'>('month');  const [exportFormat, setExportFormat] = React.useState<'pdf' | 'csv'>('pdf');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [isAddCoachDialogOpen, setIsAddCoachDialogOpen] = React.useState(false);
+  
+  // Form for adding new coach
+  const form = useForm<CoachFormValues>({
+    resolver: zodResolver(coachFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      sport: "",
+      experience: "",
+      qualifications: "",
+      salary: ""
+    }
+  });
   
   React.useEffect(() => {
     if (isMobile) {
@@ -177,10 +210,15 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
   const avgAttendance = ((attendanceData.reduce((sum, item) => sum + item.present, 0) / attendanceData.length) / (attendanceData[0].present + attendanceData[0].absent + attendanceData[0].late) * 100).toFixed(1);
   const totalCoaches = coachPerformance.length;
   const avgCoachRating = (coachPerformance.reduce((sum, coach) => sum + coach.rating, 0) / totalCoaches).toFixed(1);
-
   // Actions
-  const handleAddCoach = () => {
-    console.log('Add new coach');
+  const handleAddCoach = (data: CoachFormValues) => {
+    console.log('Adding new coach:', data);
+    toast({
+      title: "Coach Added Successfully",
+      description: `${data.name} has been added as a ${data.sport} coach.`,
+    });
+    setIsAddCoachDialogOpen(false);
+    form.reset();
   };
 
   const handleAssignStudents = (coachId: number) => {
@@ -243,11 +281,10 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
       title="Analytics Dashboard" 
       userType="admin" 
       currentPath="/admin/analytics"
-    >
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-2xl font-bold">Performance Overview</h2>
+    >      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="space-y-1">
+          <h2 className="text-xl sm:text-2xl font-bold">Performance Overview</h2>
           <p className="text-sm text-muted-foreground">Analyze your academy's key metrics and trends.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -273,83 +310,77 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
       </div>
 
       {/* Key Metrics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {/* Revenue Card */}
-        <Card className="shadow-sm">
-          <CardHeader className="p-4 flex flex-row items-center justify-between pb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">        {/* Revenue Card */}
+        <Card className="shadow-sm border border-border rounded-lg">
+          <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <IndianRupee className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {isLoading ? <Skeleton className="h-8 w-2/3" /> : <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString('en-IN')}</div>}
+          <CardContent className="p-4 sm:p-6 pt-0">
+            {isLoading ? <Skeleton className="h-8 w-2/3" /> : <div className="text-xl sm:text-2xl font-bold">₹{totalRevenue.toLocaleString('en-IN')}</div>}
             <p className="text-xs text-muted-foreground">+{revenueGrowth}% from last month</p>
           </CardContent>
         </Card>
 
         {/* Students Card */}
-        <Card className="shadow-sm">
-          <CardHeader className="p-4 flex flex-row items-center justify-between pb-2">
+        <Card className="shadow-sm border border-border rounded-lg">
+          <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Students</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{totalStudents}</div>}
+          <CardContent className="p-4 sm:p-6 pt-0">
+            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-xl sm:text-2xl font-bold">{totalStudents}</div>}
             <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
 
         {/* Attendance Card */}
-        <Card className="shadow-sm">
-          <CardHeader className="p-4 flex flex-row items-center justify-between pb-2">
+        <Card className="shadow-sm border border-border rounded-lg">
+          <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{avgAttendance}%</div>}
+          <CardContent className="p-4 sm:p-6 pt-0">
+            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-xl sm:text-2xl font-bold">{avgAttendance}%</div>}
             <p className="text-xs text-muted-foreground">+3.2% from last week</p>
           </CardContent>
         </Card>
 
         {/* Coaches Card */}
-        <Card className="shadow-sm">
-          <CardHeader className="p-4 flex flex-row items-center justify-between pb-2">
+        <Card className="shadow-sm border border-border rounded-lg">
+          <CardHeader className="p-4 sm:p-6 flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Coaches</CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{totalCoaches}</div>}
+          <CardContent className="p-4 sm:p-6 pt-0">
+            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-xl sm:text-2xl font-bold">{totalCoaches}</div>}
             <p className="text-xs text-muted-foreground">+2 new coaches this month</p>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Analytics Tabs */}
-      <Tabs defaultValue="revenue" className="space-y-4">
+      </div>      {/* Analytics Tabs */}
+      <Tabs defaultValue="revenue" className="space-y-6">
         <div className="overflow-x-auto pb-2">
-          <TabsList>
-            <TabsTrigger value="revenue">Revenue</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsList className="grid w-full max-w-md grid-cols-4 h-10">
+            <TabsTrigger value="revenue" className="text-xs sm:text-sm">Revenue</TabsTrigger>
+            <TabsTrigger value="students" className="text-xs sm:text-sm">Students</TabsTrigger>
+            <TabsTrigger value="attendance" className="text-xs sm:text-sm">Attendance</TabsTrigger>
+            <TabsTrigger value="performance" className="text-xs sm:text-sm">Performance</TabsTrigger>
           </TabsList>
-        </div>
-
-        {/* Revenue Analytics */}
-        <TabsContent value="revenue" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
-            <Card className="lg:col-span-4">
-              <CardHeader>
-                <CardTitle>Revenue Trend</CardTitle>
+        </div>        {/* Revenue Analytics */}
+        <TabsContent value="revenue" className="space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-7 gap-4 lg:gap-6">
+            <Card className="xl:col-span-4">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Revenue Trend</CardTitle>
                 <CardDescription>Monthly revenue growth over the last 6 months.</CardDescription>
               </CardHeader>
-              <CardContent className="pl-2 pr-4 sm:pr-6">
+              <CardContent className="p-4 sm:p-6 pt-0">
                 {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
-                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={revenueData} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
+                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={revenueData} margin={{ left: 5, right: 5, top: 5, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" fontSize={11} tickMargin={5} />
-                        <YAxis fontSize={11} tickMargin={5} tickFormatter={(value) => `₹${Number(value) / 1000}k`} />
+                        <XAxis dataKey="month" fontSize={10} tickMargin={5} />
+                        <YAxis fontSize={10} tickMargin={5} tickFormatter={(value) => `₹${Number(value) / 1000}k`} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Area type="monotone" dataKey="revenue" stroke="#ef4444" fill="#ef4444" fillOpacity={0.2} />
                       </AreaChart>
@@ -359,12 +390,12 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
               </CardContent>
             </Card>
 
-            <Card className="lg:col-span-3">
-              <CardHeader>
-                <CardTitle>Revenue by Sport</CardTitle>
+            <Card className="xl:col-span-3">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Revenue by Sport</CardTitle>
                 <CardDescription>Revenue distribution across top sports.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6 pt-0">
                 {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
                   <ChartContainer config={{}} className="mx-auto aspect-square max-h-[250px] sm:max-h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -379,25 +410,23 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
                 )}
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
+          </div>        </TabsContent>
 
         {/* Student Analytics */}
-        <TabsContent value="students" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TabsContent value="students" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Student Growth</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Student Growth</CardTitle>
                 <CardDescription>Student enrollment over time.</CardDescription>
               </CardHeader>
-              <CardContent className="pl-2 pr-4 sm:pr-6">
+              <CardContent className="p-4 sm:p-6 pt-0">
                 {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
-                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={revenueData} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
+                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={revenueData} margin={{ left: 5, right: 5, top: 5, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" fontSize={11} tickMargin={5} />
-                        <YAxis fontSize={11} tickMargin={5} />
+                        <XAxis dataKey="month" fontSize={10} tickMargin={5} />
+                        <YAxis fontSize={10} tickMargin={5} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Line type="monotone" dataKey="students" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4, fill: '#3b82f6' }} />
                       </LineChart>
@@ -408,18 +437,17 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Students by Sport</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Students by Sport</CardTitle>
                 <CardDescription>Distribution of students across sports.</CardDescription>
               </CardHeader>
-              <CardContent className="pl-2 pr-4 sm:pr-6">
+              <CardContent className="p-4 sm:p-6 pt-0">
                 {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
-                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={sportDistribution} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
+                  <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={sportDistribution} margin={{ left: 5, right: 5, top: 5, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="sport" fontSize={11} tickMargin={5} />
-                        <YAxis fontSize={11} tickMargin={5} />
+                        <XAxis dataKey="sport" fontSize={10} tickMargin={5} />
+                        <YAxis fontSize={10} tickMargin={5} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="students" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                       </BarChart>
@@ -429,16 +457,14 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Attendance Analytics */}
-        <TabsContent value="attendance" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        </TabsContent>        {/* Attendance Analytics */}
+        <TabsContent value="attendance" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             <Card>
-              <CardHeader>
+              <CardHeader className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
-                    <CardTitle>Attendance Trends</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl">Attendance Trends</CardTitle>
                     <CardDescription>Daily attendance patterns.</CardDescription>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -447,16 +473,34 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
                     <span className="text-sm font-medium">Coach</span>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="pl-2 pr-4 sm:pr-6">
+              </CardHeader>              <CardContent className="p-4 sm:p-6 pt-0">
                 {isLoading ? <Skeleton className="h-[250px] sm:h-[300px] w-full" /> : (
                   <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={attendanceView === 'student' ? attendanceData : coachAttendanceData} margin={{ left: -20, right: 10, top: 5, bottom: 0 }}>
+                      <AreaChart data={attendanceView === 'student' ? attendanceData : coachAttendanceData} margin={{ left: 5, right: 5, top: 5, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" fontSize={11} tickMargin={5} />
-                        <YAxis fontSize={11} tickMargin={5} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <XAxis 
+                          dataKey="date" 
+                          fontSize={10} 
+                          tickMargin={5} 
+                          interval="preserveStartEnd"
+                          tickFormatter={(value) => {
+                            const date = new Date(value);
+                            return date.getDate().toString();
+                          }}
+                        />
+                        <YAxis fontSize={10} tickMargin={5} />
+                        <ChartTooltip 
+                          content={<ChartTooltipContent />}
+                          labelFormatter={(value) => {
+                            const date = new Date(value);
+                            return date.toLocaleDateString('en-US', { 
+                              weekday: 'short', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            });
+                          }}
+                        />
                         <Area type="monotone" dataKey="present" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
                         <Area type="monotone" dataKey="late" stackId="1" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
                         <Area type="monotone" dataKey="absent" stackId="1" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} />
@@ -468,11 +512,11 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>{attendanceView === 'student' ? 'Student' : 'Coach'} Attendance Summary</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">{attendanceView === 'student' ? 'Student' : 'Coach'} Attendance Summary</CardTitle>
                 <CardDescription>Top 10 individual attendance records.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6 pt-0">
                 {isLoading ? (
                   <div className="space-y-2">
                     {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
@@ -480,7 +524,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
                 ) : (
                   <div className="space-y-2 max-h-[280px] overflow-y-auto pr-2">
                     {(attendanceView === 'student' ? studentAttendanceDetails : coachAttendanceDetails).slice(0, 10).map((person, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 border rounded-md">
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="flex items-center gap-3">
                           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: person.attendanceRate > 90 ? '#10b981' : person.attendanceRate > 75 ? '#f59e0b' : '#ef4444' }}></div>
                           <div>
@@ -499,22 +543,176 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Performance Analytics */}
-        <TabsContent value="performance" className="space-y-4">
+        </TabsContent>        {/* Performance Analytics */}
+        <TabsContent value="performance" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Coach Performance</CardTitle>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Coach Performance</CardTitle>
               <CardDescription>Coach effectiveness metrics and student assignments.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Input placeholder="Search coaches..." className="max-w-xs" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                <Button><UserPlus className="h-4 w-4 mr-2" />Add Coach</Button>
+            <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
+              <div className="flex flex-col sm:flex-row gap-2">                <Input 
+                  placeholder="Search coaches..." 
+                  className="max-w-xs" 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                />
+                <Dialog open={isAddCoachDialogOpen} onOpenChange={setIsAddCoachDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full sm:w-auto">
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add Coach
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Add New Coach</DialogTitle>
+                      <DialogDescription>
+                        Fill in the details below to add a new coach to your academy.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(handleAddCoach)} className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Full Name *</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter coach's full name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="sport"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Sport *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select sport" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Soccer">Soccer</SelectItem>
+                                    <SelectItem value="Basketball">Basketball</SelectItem>
+                                    <SelectItem value="Tennis">Tennis</SelectItem>
+                                    <SelectItem value="Swimming">Swimming</SelectItem>
+                                    <SelectItem value="Cricket">Cricket</SelectItem>
+                                    <SelectItem value="Athletics">Athletics</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email Address *</FormLabel>
+                                <FormControl>
+                                  <Input type="email" placeholder="coach@example.com" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Phone Number *</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="+91 9876543210" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="experience"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Experience (Years) *</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="5" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="salary"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Monthly Salary (₹) *</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="50000" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="qualifications"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Qualifications & Certifications *</FormLabel>
+                              <FormControl>
+                                <textarea
+                                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  placeholder="Enter qualifications, certifications, and relevant experience..."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="flex justify-end space-x-2 pt-4">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setIsAddCoachDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit">
+                            Add Coach
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
               </div>
-              <div className="rounded-md border">
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 p-4 font-medium text-muted-foreground text-sm border-b">
+              <div className="rounded-lg border overflow-hidden">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 p-4 font-medium text-muted-foreground text-sm border-b bg-muted/50">
                   <div className="col-span-2 sm:col-span-1">Coach</div>
                   <div className="hidden sm:block">Sport</div>
                   <div className="text-right">Students</div>
@@ -523,13 +721,14 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onBack }) => {
                 </div>
                 <div className="divide-y">
                   {coachPerformance.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(coach => (
-                    <div key={coach.id} className="grid grid-cols-3 sm:grid-cols-5 gap-4 p-4 items-center text-sm">
+                    <div key={coach.id} className="grid grid-cols-3 sm:grid-cols-5 gap-4 p-4 items-center text-sm hover:bg-muted/50 transition-colors">
                       <div className="col-span-2 sm:col-span-1 font-medium">{coach.name}</div>
                       <div className="hidden sm:block text-muted-foreground">{coach.sport}</div>
-                      <div className="text-right">{coach.students}</div>
+                      <div className="text-right font-medium">{coach.students}</div>
                       <div className="hidden sm:block text-right">{coach.retention}%</div>
                       <div className="text-right flex items-center justify-end gap-1 text-amber-500">
                         <span className="font-semibold">{coach.rating.toFixed(1)}</span>
+                        <span className="text-xs">★</span>
                       </div>
                     </div>
                   ))}
