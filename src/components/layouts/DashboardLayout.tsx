@@ -107,12 +107,12 @@ const DashboardLayout = ({
   const colors = getUserTypeColors();
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen flex flex-col bg-white">
       {/* Top Navigation Bar */}
       <header className="w-full border-b border-gray-200 bg-white shadow-sm sticky top-0 z-40">        <div className="flex h-16 items-center px-4 md:px-6">
           <div className="flex items-center gap-2">
-            {/* Mobile Menu - Hidden for admin users */}
-            {userType !== 'admin' && (
+            {/* Mobile Menu - Hidden for admin and coach users */}
+            {userType === 'parent' && (
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="md:hidden">
@@ -171,27 +171,29 @@ const DashboardLayout = ({
             </div>
           </div>
           
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6 mx-6 lg:mx-10">
-            {navigationItems.map((item) => (
-              <Button
-                key={item.path}
-                variant={currentPath === item.path ? "secondary" : "ghost"}
-                className={cn(
-                  "gap-2 transition-all", 
-                  currentPath === item.path ? "" : "hover:bg-gray-100"
-                )}
-                onClick={() => navigate(item.path)}
-              >
-                {item.icon}
-                <span className="hidden lg:inline-block">{item.label}</span>
-              </Button>
-            ))}
-          </nav>
+          {/* Desktop Navigation - Hidden for coaches */}
+          {userType !== 'coach' && (
+            <nav className="hidden md:flex items-center gap-6 mx-6 lg:mx-10">
+              {navigationItems.map((item) => (
+                <Button
+                  key={item.path}
+                  variant={currentPath === item.path ? "secondary" : "ghost"}
+                  className={cn(
+                    "gap-2 transition-all", 
+                    currentPath === item.path ? "" : "hover:bg-gray-100"
+                  )}
+                  onClick={() => navigate(item.path)}
+                >
+                  {item.icon}
+                  <span className="hidden lg:inline-block">{item.label}</span>
+                </Button>
+              ))}
+            </nav>
+          )}
           
           <div className="ml-auto flex items-center gap-2">            
-            {/* Command Menu Trigger - Hide for admin */}
-            {userType !== 'admin' && (
+            {/* Command Menu Trigger - Hide for admin and coach */}
+            {userType === 'parent' && (
               <Button 
                 variant="outline" 
                 className="hidden md:flex gap-2"
@@ -205,8 +207,8 @@ const DashboardLayout = ({
               </Button>
             )}
             
-            {/* Notifications - Hide for admin*/}
-            {userType !== 'admin' && (
+            {/* Notifications - Hide for admin and coach */}
+            {userType === 'parent' && (
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
@@ -226,23 +228,38 @@ const DashboardLayout = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate(`/${userType}/profile`)}>
-                    Profile
-                    <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(`/${userType}/settings`)}>
-                    Settings
-                    <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/')} className="text-red-600">
-                  Log out
-                  <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-                </DropdownMenuItem>
+                {userType === 'coach' ? (
+                  // Simplified menu for coaches - only logout
+                  <>
+                    <DropdownMenuLabel>Coach Menu</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/')} className="text-red-600">
+                      Log out
+                      <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  // Full menu for admin and parent
+                  <>
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={() => navigate(`/${userType}/profile`)}>
+                        Profile
+                        <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/${userType}/settings`)}>
+                        Settings
+                        <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/')} className="text-red-600">
+                      Log out
+                      <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -251,31 +268,33 @@ const DashboardLayout = ({
       
       {/* Page Content */}
       <div className="flex-1 container max-w-7xl mx-auto px-4 py-6">
-        {/* Breadcrumbs and Page Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-          <div>
-            <Breadcrumb className="mb-2">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink 
-                    onClick={() => navigate(`/${userType}/dashboard`)}
-                    className={colors.subtle}
-                  >
-                    {userType === 'admin' ? 'Admin' : userType === 'coach' ? 'Coach' : 'Parent'}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className={colors.separator} />
-                <BreadcrumbItem>
-                  <BreadcrumbLink className="font-medium">
-                    {currentPageName}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              {title}
-            </h1>
+        {/* Breadcrumbs and Page Title - Hidden for coaches */}
+        {userType !== 'coach' && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <div>
+              <Breadcrumb className="mb-2">
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink 
+                      onClick={() => navigate(`/${userType}/dashboard`)}
+                      className={colors.subtle}
+                    >
+                      {userType === 'admin' ? 'Admin' : userType === 'coach' ? 'Coach' : 'Parent'}
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className={colors.separator} />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink className="font-medium">
+                      {currentPageName}
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                {title}
+              </h1>
+            </div>
           </div>
-        </div>
+        )}
         
         {/* Main Content */}
         <div className="relative">

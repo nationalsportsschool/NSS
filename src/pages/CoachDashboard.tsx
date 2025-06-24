@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Student {
   id: string;
@@ -23,6 +24,7 @@ const CoachDashboard = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [newDrillTitle, setNewDrillTitle] = useState('');
   const [newDrillImageFile, setNewDrillImageFile] = useState<File | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<string>('All Batches');
   
   const [students, setStudents] = useState<Student[]>([
     {
@@ -36,7 +38,7 @@ const CoachDashboard = () => {
       name: 'Emma Johnson',
       rollNumber: 'S002',
       batch: 'Morning Batch A',
-      status: 'absent'
+      status: 'present'
     }, {
       id: '3',
       name: 'Michael Brown',
@@ -57,6 +59,14 @@ const CoachDashboard = () => {
       status: 'present'
     }
   ]);
+
+  // Get unique batches from students
+  const uniqueBatches = Array.from(new Set(students.map(student => student.batch)));
+  
+  // Filter students based on selected batch
+  const filteredStudents = selectedBatch === 'All Batches' 
+    ? students 
+    : students.filter(student => student.batch === selectedBatch);
 
   const handleCheckIn = () => {
     const timestamp = new Date();
@@ -211,10 +221,11 @@ const CoachDashboard = () => {
       submissionTime: new Date().toISOString(),
       sessionDate: new Date().toDateString(),
       coachCheckIn: checkInTime?.toISOString() || null,
-      totalStudents: students.length,
-      presentCount: students.filter(s => s.status === 'present').length,
-      absentCount: students.filter(s => s.status === 'absent').length,
-      students: students.map(student => ({
+      selectedBatch: selectedBatch,
+      totalStudents: filteredStudents.length,
+      presentCount: filteredStudents.filter(s => s.status === 'present').length,
+      absentCount: filteredStudents.filter(s => s.status === 'absent').length,
+      students: filteredStudents.map(student => ({
         id: student.id,
         name: student.name,
         rollNumber: student.rollNumber,
@@ -226,8 +237,9 @@ const CoachDashboard = () => {
     console.log('=== ATTENDANCE SUBMISSION ===');
     console.log('Submission initiated at:', new Date().toISOString());
     console.log('Session date:', attendanceData.sessionDate);
+    console.log('Selected batch:', attendanceData.selectedBatch);
     console.log('Coach check-in time:', attendanceData.coachCheckIn);
-    console.log('Total students:', attendanceData.totalStudents);
+    console.log('Total students (filtered):', attendanceData.totalStudents);
     console.log('Present students:', attendanceData.presentCount);
     console.log('Absent students:', attendanceData.absentCount);
     console.log('Detailed attendance:');
@@ -239,7 +251,7 @@ const CoachDashboard = () => {
 
     toast({
       title: "Attendance Submitted",
-      description: `${attendanceData.presentCount} present, ${attendanceData.absentCount} absent`,
+      description: `${attendanceData.presentCount} present, ${attendanceData.absentCount} absent${selectedBatch !== 'All Batches' ? ` in ${selectedBatch}` : ''}`,
     });
   };  const handleDrillUpdate = () => {
     if (newDrillTitle) {
@@ -260,20 +272,20 @@ const CoachDashboard = () => {
       <div className="flex gap-2">
         <Button
           onClick={() => setStudentStatus(student.id, 'present')}
-          className={`w-24 py-2 rounded-lg font-semibold text-xs transition-all duration-300 ease-in-out ${
+          className={`w-24 py-2 rounded-md font-semibold text-xs transition-all duration-300 ease-in-out ${
             student.status === 'present'
-              ? 'bg-green-600 text-white shadow-md transform hover:scale-105'
-              : 'bg-green-100 text-green-800 hover:bg-green-200'
+              ? 'bg-green-400 text-green-800'
+              : 'bg-green-100 text-green-600'
           }`}
         >
           Present
         </Button>
         <Button
           onClick={() => setStudentStatus(student.id, 'absent')}
-          className={`w-24 py-2 rounded-lg font-semibold text-xs transition-all duration-300 ease-in-out ${
+          className={`w-24 py-2 rounded-md font-semibold text-xs transition-all duration-300 ease-in-out ${
             student.status === 'absent'
-              ? 'bg-red-600 text-white shadow-md transform hover:scale-105'
-              : 'bg-red-100 text-red-800 hover:bg-red-200'
+              ? 'bg-red-400 text-red-800'
+              : 'bg-red-100 text-red-600'
           }`}
         >
           Absent
@@ -289,7 +301,7 @@ const CoachDashboard = () => {
     >
       <div className="space-y-6">
         {/* Check In/Out Button */}
-        <Card className="shadow-lg rounded-xl">
+        <Card className="shadow-md rounded-lg">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl font-bold text-gray-700">Session Status</CardTitle>
           </CardHeader>
@@ -297,14 +309,14 @@ const CoachDashboard = () => {
             {isCheckedIn ? (
               <Button
                 onClick={handleCheckOut}
-                className="w-full h-12 bg-red-600 text-white hover:bg-red-700 rounded-lg font-semibold text-base tracking-wide transition-transform transform hover:scale-105"
+                className="w-full h-12 bg-gray-600 text-white hover:bg-gray-700 rounded-md font-semibold text-base tracking-wide transition-transform transform hover:scale-105"
               >
                 Check Out
               </Button>
             ) : (
               <Button
                 onClick={handleCheckIn}
-                className="w-full h-12 bg-green-600 text-white hover:bg-green-700 rounded-lg font-semibold text-base tracking-wide transition-transform transform hover:scale-105"
+                className="w-full h-12 bg-black text-white hover:bg-gray-800 rounded-md font-semibold text-base tracking-wide transition-transform transform hover:scale-105"
               >
                 Check In
               </Button>
@@ -317,15 +329,65 @@ const CoachDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Students List */}
+        <Card className="shadow-md rounded-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold text-gray-700">Student Attendance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Batch Filter */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Batch</label>
+              <Select value={selectedBatch} onValueChange={setSelectedBatch}>
+                <SelectTrigger className="w-full md:w-64">
+                  <SelectValue placeholder="Select batch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Batches">All Batches</SelectItem>
+                  {uniqueBatches.map(batch => (
+                    <SelectItem key={batch} value={batch}>{batch}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-4">
+              {filteredStudents.map(student => (
+                <div key={student.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-800">{student.name}</div>
+                      <div className="text-sm text-gray-500 mt-1">{student.rollNumber} • {student.batch}</div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    {getStatusButtons(student)}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Submit Attendance Button */}
+            <div className="mt-6 pt-5 border-t border-gray-200">
+              <Button
+                onClick={handleSubmitAttendance}
+                className="w-full h-12 bg-blue-600 text-white hover:bg-blue-700 rounded-md font-semibold text-base tracking-wide transition-transform transform hover:scale-105"
+              >
+                Submit Attendance
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Drill Activity Update */}
-        <Card className="shadow-lg rounded-xl">
+        <Card className="shadow-md rounded-lg">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl font-bold text-gray-700">Drill Activity</CardTitle>
           </CardHeader>
           <CardContent>
             <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="w-full h-12 bg-orange-500 text-white hover:bg-orange-600 rounded-lg font-semibold text-base tracking-wide transition-transform transform hover:scale-105">
+                <Button className="w-full h-12 bg-black text-white hover:bg-gray-800 rounded-md font-semibold text-base tracking-wide transition-transform transform hover:scale-105">
                   Update Drill
                 </Button>
               </DialogTrigger>
@@ -361,40 +423,6 @@ const CoachDashboard = () => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-          </CardContent>
-        </Card>
-
-        {/* Students List */}
-        <Card className="shadow-lg rounded-xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold text-gray-700">Student Attendance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {students.map(student => (
-                <div key={student.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="font-semibold text-gray-800">{student.name}</div>
-                      <div className="text-sm text-gray-500 mt-1">{student.rollNumber} • {student.batch}</div>
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    {getStatusButtons(student)}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Submit Attendance Button */}
-            <div className="mt-6 pt-5 border-t border-gray-200">
-              <Button
-                onClick={handleSubmitAttendance}
-                className="w-full h-12 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-semibold text-base tracking-wide transition-transform transform hover:scale-105"
-              >
-                Submit Attendance
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
