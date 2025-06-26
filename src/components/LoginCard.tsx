@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useCoachAuth } from '@/contexts/CoachAuthContext';
 
 interface LoginCardProps {
   userType: 'admin' | 'coach' | 'parent';
@@ -15,26 +16,69 @@ interface LoginCardProps {
 const LoginCard = ({ userType, title, description, icon }: LoginCardProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login: coachLogin } = useCoachAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(`${userType} login attempt:`, { username, password });
     
-    // Mock login success
-    toast({
-      title: "Success",
-      description: "Welcome back!",
-    });
+    if (!username || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both username and password",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Redirect based on user type
-    if (userType === 'admin') {
-      navigate('/admin/analytics');
-    } else if (userType === 'coach') {
-      navigate('/coach/dashboard');
-    } else if (userType === 'parent') {
-      navigate('/parent/dashboard');
+    setIsLoading(true);
+
+    try {
+      if (userType === 'coach') {
+        // Use real coach authentication
+        const result = await coachLogin(username, password);
+        
+        if (result.success) {
+          toast({
+            title: "Login Successful",
+            description: "Welcome back!",
+          });
+          navigate('/coach/dashboard');
+        } else {
+          toast({
+            title: "Login Failed",
+            description: result.message || "Invalid credentials. Please check your details.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Mock login for admin and parent (implement later)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log(`${userType} login attempt:`, { username, password });
+        
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!",
+        });
+
+        // Redirect based on user type
+        if (userType === 'admin') {
+          navigate('/admin/analytics');
+        } else if (userType === 'parent') {
+          navigate('/parent/dashboard');
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -88,8 +132,9 @@ const LoginCard = ({ userType, title, description, icon }: LoginCardProps) => {
           <Button 
             type="submit" 
             className="w-full h-10 bg-black text-white hover:bg-gray-800 font-semibold text-base"
+            disabled={isLoading}
           >
-            Sign In
+            {isLoading ? "Signing In..." : "Sign In"}
           </Button>
         </form>
       </div>

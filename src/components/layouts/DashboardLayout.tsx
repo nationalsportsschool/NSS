@@ -114,7 +114,7 @@ const DashboardLayout = ({
                 alt="National Sports School Logo" 
                 className="h-8 w-auto object-contain"
               />
-              {userType !== 'admin' && (
+              {userType === 'coach' && (
                 <span className="font-bold text-xl hidden sm:block">NSS</span>
               )}
             </div>

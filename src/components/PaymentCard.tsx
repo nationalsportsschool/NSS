@@ -2,69 +2,137 @@ import React from 'react';
 import { Wallet, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useCreatePaymentOrder, useRazorpayKey } from '@/lib/api';
 
 interface PaymentCardProps {
   childName: string;
   pendingFees?: number;
 }
 
+// Declare Razorpay global type
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const PaymentCard = ({ childName, pendingFees = 0 }: PaymentCardProps) => {
   const { toast } = useToast();
+  const createOrderMutation = useCreatePaymentOrder();
+  const { data: razorpayKeyData } = useRazorpayKey();
 
-  const handleOpenPaymentApp = () => {
-    const amount = pendingFees;
-    const payeeName = "National Sports School";
-    // IMPORTANT: Replace with your actual VPA/UPI ID in a real application
-    const virtualPaymentAddress = "payment@nss.ac.in"; 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  };
 
-    // Construct the UPI URL
-    const upiUrl = `upi://pay?pa=${virtualPaymentAddress}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=Fee payment for ${encodeURIComponent(childName)}`;
-
-    console.log('=== PAYMENT INITIATION ===');
+  const handleRazorpayPayment = async () => {
+    console.log('=== RAZORPAY PAYMENT INITIATION ===');
     console.log('Child:', childName);
-    console.log('Amount:', amount);
-    console.log('UPI URL:', upiUrl);
+    console.log('Amount in rupees:', pendingFees);
     console.log('Timestamp:', new Date().toISOString());
 
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      // On mobile, attempt to open the UPI deep link.
-      // This will trigger the OS to show a list of installed UPI apps.
-      window.location.href = upiUrl;
+    try {
+      // Load Razorpay script if not already loaded
+      const isScriptLoaded = await loadRazorpayScript();
       
-      toast({
-        title: "Opening Payment App",
-        description: "Please select an app to complete the payment.",
-      });
-
-      // Fallback for when no app can handle the UPI link
-      const timer = setTimeout(() => {
+      if (!isScriptLoaded) {
         toast({
-          title: "No Payment App Found",
-          description: "Could not automatically open a payment app. Please use your UPI app manually.",
+          title: "Error",
+          description: "Failed to load payment gateway. Please try again.",
           variant: "destructive",
         });
-      }, 3000);
+        return;
+      }
 
-      // If the app opens, the browser loses focus, and we can clear the fallback timer.
-      window.addEventListener('blur', () => {
-        clearTimeout(timer);
-      }, { once: true });
+      if (!window.Razorpay) {
+        toast({
+          title: "Error",
+          description: "Payment gateway not available. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    } else {
-      // On desktop, UPI links are not supported. Open a fallback web payment URL.
-      // In a real-world scenario, this would be your payment gateway page.
-      console.log('Desktop detected. Opening web payment fallback.');
-      const fallbackUrl = `https://pay.google.com/gp/v/pay?pn=${encodeURIComponent(payeeName)}&pa=${virtualPaymentAddress}&am=${amount}&cu=INR`;
-      window.open(fallbackUrl, '_blank');
-      
+      // Create payment order
+      const orderData = {
+        amount: pendingFees, // Amount in rupees
+        receiptId: `receipt_${childName.replace(/\s+/g, '_')}_${Date.now()}`,
+        notes: {
+          student_name: childName,
+          payment_for: 'School Fees',
+          payment_type: 'test_payment'
+        }
+      };
+
+      console.log('Creating payment order:', orderData);
+
+      const orderResponse = await createOrderMutation.mutateAsync(orderData);
+      console.log('Order created successfully:', orderResponse);
+
+      // Configure Razorpay options
+      const options = {
+        key: (razorpayKeyData as any)?.key_id || 'rzp_test_GhNPi99WYzHbbc', // Fallback to test key
+        amount: (orderResponse as any).amount, // Amount in paise (already converted by backend)
+        currency: (orderResponse as any).currency || 'INR',
+        name: 'National Sports School',
+        description: `Fees payment for ${childName}`,
+        order_id: (orderResponse as any).orderId,
+        handler: function (response: any) {
+          console.log('Payment successful:', response);
+          toast({
+            title: "Payment Successful!",
+            description: `Payment of ₹${pendingFees} completed successfully.`,
+          });
+          
+          // Here you can add code to verify payment with backend
+          console.log('Payment ID:', response.razorpay_payment_id);
+          console.log('Order ID:', response.razorpay_order_id);
+          console.log('Signature:', response.razorpay_signature);
+        },
+        prefill: {
+          name: childName,
+          email: 'parent@example.com',
+          contact: '9999999999'
+        },
+        notes: orderData.notes,
+        theme: {
+          color: '#3399cc'
+        },
+        modal: {
+          ondismiss: function() {
+            toast({
+              title: "Payment Cancelled",
+              description: "You cancelled the payment process.",
+            });
+          }
+        }
+      };
+
+      console.log('Launching Razorpay with options:', options);
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+
+    } catch (error: any) {
+      console.error('Payment initiation failed:', error);
       toast({
-        title: "Redirecting to Payment",
-        description: "Opening a secure payment page in a new tab.",
+        title: "Payment Error",
+        description: error.message || "Failed to initiate payment. Please try again.",
+        variant: "destructive",
       });
     }
-    console.log('===========================');
+
+    console.log('===============================');
   };
 
   return (
@@ -96,18 +164,19 @@ const PaymentCard = ({ childName, pendingFees = 0 }: PaymentCardProps) => {
         {pendingFees > 0 && (
           <div>
             <Button 
-              onClick={handleOpenPaymentApp}
+              onClick={handleRazorpayPayment}
+              disabled={createOrderMutation.isPending}
               className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base"
             >
               <Smartphone className="h-5 w-5 mr-2" />
-              Pay Now
+              {createOrderMutation.isPending ? 'Processing...' : 'Pay Now'}
             </Button>
           </div>
         )}
 
         <div className="text-center pt-2">
           <p className="text-xs text-muted-foreground">
-            Secure payments processed via UPI
+            Secure payments via Razorpay (Test Mode)
           </p>
         </div>
       </div>

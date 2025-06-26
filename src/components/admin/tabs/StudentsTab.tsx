@@ -8,29 +8,33 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Phone, Info, Search, Filter, X, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useUpdateStudent } from '@/lib/api';
 import * as XLSX from 'xlsx';
 
-// Define the type for a single student
+// Define the type for a single student based on actual database structure
 type Student = {
   id: number;
   name: string;
   sport: string;
-  feePlan: string;
-  paymentStatus: 'paid' | 'not_paid' | 'upcoming';
-  pendingAmount: number;
-  parentContact: string;
-  lastPayment: string;
-  group: string;
-  coach: string;
+  group_level: string;
+  fee_plan: string;
+  fee_amount: number;
+  payment_status: 'paid' | 'not_paid' | 'upcoming';
+  pending_amount: number;
+  parent_contact: string;
+  last_payment: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 interface StudentsTabProps {
-  students: Omit<Student, 'coach'>[];
+  students: Student[];
 }
 
 const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
   const { toast } = useToast();
-  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const updateStudentMutation = useUpdateStudent();
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [selectedSport, setSelectedSport] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('');
   
@@ -40,18 +44,20 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
   const [filterCoach, setFilterCoach] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Available options
-  const sports = ['Cricket', 'Football', 'Tennis', 'Swimming', 'Athletics', 'Basketball'];
+  // Available options from database enums
+  const sports = ['Cricket', 'Football', 'Tennis', 'Athletics', 'Swimming', 'Basketball'];
   const batches = ['Beginners', 'Intermediate', 'Advanced', 'Professional'];
-  const coaches = ['Suresh Kumar', 'Priya Singh', 'Rajesh Patel', 'Meera Sharma', 'Amit Joshi'];
+  
+  // Get unique coaches from the students data (in real app, fetch from coaches table)
+  const coaches = ['All Coaches']; // Placeholder as coach assignment isn't implemented yet
 
-  // Filter logic
+  // Filter logic with correct field names
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSport = !filterSport || student.sport === filterSport;
-    const matchesCoach = !filterCoach || 'Suresh Kumar' === filterCoach; // Using placeholder coach
+    // Note: Coach filtering disabled as coach assignment not yet implemented
     
-    return matchesSearch && matchesSport && matchesCoach;
+    return matchesSearch && matchesSport;
   });
 
   const clearFilters = () => {
@@ -62,31 +68,49 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
 
   const hasActiveFilters = searchQuery || filterSport || filterCoach;
 
-  const handleEditStudent = (student: any) => {
+  const handleEditStudent = (student: Student) => {
     setEditingStudent(student);
     setSelectedSport(student.sport);
-    setSelectedBatch(student.group);
+    setSelectedBatch(student.group_level);
   };
-  const handleSaveChanges = () => {
-    // In a real app, this would make an API call to update the student
-    toast({
-      title: "Student Updated",
-      description: `${editingStudent.name} has been assigned to ${selectedSport} - ${selectedBatch} batch.`,
-    });
-    setEditingStudent(null);
+
+  const handleSaveChanges = async () => {
+    if (!editingStudent) return;
+    
+    try {
+      await updateStudentMutation.mutateAsync({
+        id: editingStudent.id,
+        data: {
+          sport: selectedSport,
+          group_level: selectedBatch,
+        }
+      });
+      
+      toast({
+        title: "Student Updated",
+        description: `${editingStudent.name} has been assigned to ${selectedSport} - ${selectedBatch} batch.`,
+      });
+      setEditingStudent(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update student. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExportToExcel = () => {
-    // Prepare data for export
+    // Prepare data for export with correct field names
     const exportData = filteredStudents.map(student => ({
       'Student Name': student.name,
       'Sport': student.sport,
-      'Group': student.group,
-      'Fee Plan': student.feePlan,
-      'Payment Status': student.paymentStatus === 'paid' ? 'Paid' : 'Pending',
-      'Pending Amount (₹)': student.pendingAmount,
-      'Parent Contact': student.parentContact,
-      'Last Payment': student.lastPayment
+      'Group': student.group_level,
+      'Fee Plan': student.fee_plan,
+      'Payment Status': student.payment_status === 'paid' ? 'Paid' : 'Pending',
+      'Pending Amount (₹)': student.pending_amount,
+      'Parent Contact': student.parent_contact,
+      'Last Payment': student.last_payment || 'N/A'
     }));
 
     // Create workbook and worksheet
@@ -222,13 +246,13 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-md font-semibold">{student.name}</CardTitle>                  <Badge
                     className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-                      student.paymentStatus === 'paid' 
+                      student.payment_status === 'paid' 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
-                    {student.paymentStatus === 'paid' 
+                    {student.payment_status === 'paid' 
                       ? 'Paid' 
-                      : `Pending: ₹${student.pendingAmount}`
+                      : `Pending: ₹${student.pending_amount}`
                     }
                   </Badge>
                 </div>
@@ -239,24 +263,24 @@ const StudentsTab: React.FC<StudentsTabProps> = ({ students }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Group:</span>
-                  <span>{student.group}</span>
+                  <span>{student.group_level}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Fee Plan:</span>
-                  <span>{student.feePlan}</span>
-                </div>                {student.pendingAmount > 0 && (
+                  <span>{student.fee_plan}</span>
+                </div>                {student.pending_amount > 0 && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Pending Amount:</span>
                     <span className="font-semibold text-red-600">
-                      ₹{student.pendingAmount}
+                      ₹{student.pending_amount}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Parent:</span>
                   <div className="flex items-center gap-2">
-                    <span>{student.parentContact}</span>
-                    <a href={`tel:${student.parentContact}`} className="text-gray-500 hover:text-gray-800">
+                    <span>{student.parent_contact}</span>
+                    <a href={`tel:${student.parent_contact}`} className="text-gray-500 hover:text-gray-800">
                       <Phone className="h-4 w-4" />
                     </a>
                   </div>

@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Edit3, Filter, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useMarkStudentAttendance, useStudents } from '@/lib/api';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Student {
   id: string;
@@ -17,43 +19,49 @@ interface Student {
 const StudentAttendanceManager = () => {
   const [selectedBatch, setSelectedBatch] = useState<string>('all');
   const { toast } = useToast();
+  const markStudentAttendanceMutation = useMarkStudentAttendance();
+  const { data: studentsData = [], isLoading: studentsLoading } = useStudents();
   
-  const [students, setStudents] = useState<Student[]>([
-    {
-      id: '1',
-      name: 'John Smith',
-      rollNumber: 'S001',
-      batch: 'Morning Batch A',
-      status: 'present'
-    }, {
-      id: '2',
-      name: 'Emma Johnson',
-      rollNumber: 'S002',
-      batch: 'Morning Batch A',
-      status: 'absent'
-    }, {
-      id: '3',
-      name: 'Michael Brown',
-      rollNumber: 'S003',
-      batch: 'Morning Batch A',
-      status: 'present'
-    }, {
-      id: '4',
-      name: 'Sarah Davis',
-      rollNumber: 'S004',
-      batch: 'Evening Batch B',
-      status: 'present'
-    }, {
-      id: '5',
-      name: 'David Wilson',
-      rollNumber: 'S005',
-      batch: 'Evening Batch B',
-      status: 'present'
-    }]
-  );
+  const [students, setStudents] = useState<Student[]>([]);
+
+  // Convert students data to local format with mock batch assignment
+  React.useEffect(() => {
+    if (Array.isArray(studentsData) && studentsData.length > 0) {
+      const batches = ['Morning Batch A', 'Evening Batch B', 'Weekend Batch C'];
+      const convertedStudents = (studentsData as any[]).slice(0, 15).map((student, index) => ({
+        id: student.id.toString(),
+        name: student.name,
+        rollNumber: student.roll_number,
+        batch: batches[index % batches.length],
+        status: 'present' as const
+      }));
+      setStudents(convertedStudents);
+    }
+  }, [studentsData]);
 
   const batches = ['Morning Batch A', 'Evening Batch B', 'Weekend Batch C'];
   const filteredStudents = selectedBatch === 'all' ? students : students.filter(student => student.batch === selectedBatch);
+
+  // Loading state
+  if (studentsLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array(6).fill(0).map((_, i) => (
+            <div key={i} className="p-4 border rounded-lg">
+              <Skeleton className="h-4 w-2/3 mb-2" />
+              <Skeleton className="h-3 w-1/2 mb-2" />
+              <Skeleton className="h-8 w-20" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const toggleStudentStatus = (studentId: string) => {
     console.log('Toggling student status for student ID:', studentId);
@@ -73,39 +81,50 @@ const StudentAttendanceManager = () => {
     setSelectedBatch(batch);
   };
 
-  const handleSubmitAttendance = () => {
-    const timestamp = new Date();
-    const attendanceData = {
-      submissionTime: timestamp.toISOString(),
-      batch: selectedBatch,
-      totalStudents: filteredStudents.length,
-      presentStudents: filteredStudents.filter(s => s.status === 'present').length,
-      absentStudents: filteredStudents.filter(s => s.status === 'absent').length,
-      attendanceDetails: filteredStudents.map(student => ({
-        id: student.id,
-        name: student.name,
-        rollNumber: student.rollNumber,
-        batch: student.batch,
-        status: student.status
-      }))
-    };
+  const handleSubmitAttendance = async () => {
+    const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    try {
+      // Mark attendance for each student
+      const attendancePromises = filteredStudents.map(student => {
+        const attendanceData = {
+          studentId: parseInt(student.id), // Convert to number for backend
+          date: currentDate,
+          status: student.status === 'present' ? 'Present' : 'Absent', // Capitalize for backend
+          batch: student.batch,
+          notes: `Marked via StudentAttendanceManager on ${new Date().toLocaleString()}`
+        };
 
-    console.log('=== ATTENDANCE SUBMISSION ===');
-    console.log('Submission timestamp:', timestamp.toISOString());
-    console.log('Selected batch filter:', selectedBatch);
-    console.log('Attendance summary:', {
-      totalStudents: attendanceData.totalStudents,
-      presentStudents: attendanceData.presentStudents,
-      absentStudents: attendanceData.absentStudents
-    });
-    console.log('Detailed attendance data:', attendanceData.attendanceDetails);
-    console.log('Full attendance submission data:', attendanceData);
-    console.log('==============================');
+        return markStudentAttendanceMutation.mutateAsync(attendanceData);
+      });
 
-    toast({
-      title: "Attendance Submitted",
-      description: "Student attendance has been successfully submitted"
-    });
+      // Wait for all attendance records to be saved
+      await Promise.all(attendancePromises);
+
+      const presentCount = filteredStudents.filter(s => s.status === 'present').length;
+      const absentCount = filteredStudents.filter(s => s.status === 'absent').length;
+
+      console.log('=== ATTENDANCE SAVED TO DATABASE ===');
+      console.log('Date:', currentDate);
+      console.log('Batch filter:', selectedBatch);
+      console.log('Present students:', presentCount);
+      console.log('Absent students:', absentCount);
+      console.log('Total students:', filteredStudents.length);
+      console.log('====================================');
+
+      toast({
+        title: "✅ Attendance Saved to Database",
+        description: `${presentCount} present, ${absentCount} absent - Data saved to Supabase`,
+      });
+
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      toast({
+        title: "❌ Error Saving Attendance",
+        description: "Failed to save attendance to database. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusButton = (status: string, onClick: () => void) => {

@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, User, Users } from 'lucide-react';
+import { useCoachAuth } from '@/contexts/CoachAuthContext';
+import { apiClient } from '@/lib/api';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 
 const Index = () => {
@@ -15,6 +17,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login: coachLogin } = useCoachAuth();
 
   const roles = [
     {
@@ -63,9 +66,9 @@ const Index = () => {
     
     if (!username || !password) {
       toast({
-        variant: "destructive",
         title: "Missing Information",
         description: "Please enter both username and password",
+        variant: "destructive",
       });
       return;
     }
@@ -73,29 +76,93 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      // Simulate login process
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log(`${selectedRole} login attempt:`, { username, password });
-      
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${username}!`,
-      });
-
-      // Redirect based on user type
-      if (selectedRole === 'admin') {
-        navigate('/admin/analytics');
-      } else if (selectedRole === 'coach') {
-        navigate('/coach/dashboard');
+      if (selectedRole === 'coach') {
+        // Use real coach authentication (exact same as CoachLogin.tsx)
+        const result = await coachLogin(username, password);
+        
+        if (result.success) {
+          toast({
+            title: "Login Successful",
+            description: "Welcome to your coach dashboard!",
+          });
+          navigate('/coach/dashboard');
+        } else {
+          toast({
+            title: "Login Failed",
+            description: result.message || "Invalid credentials. Please check your username and password.",
+            variant: "destructive",
+          });
+        }
+      } else if (selectedRole === 'admin') {
+        // Admin authentication using database
+        try {
+          const result = await apiClient.adminLogin(username, password);
+          if (result.success) {
+            // Store admin token and data
+            localStorage.setItem('adminToken', result.data.token);
+            localStorage.setItem('adminData', JSON.stringify(result.data.admin));
+            
+            toast({
+              title: "Login Successful",
+              description: `Welcome back, ${result.data.admin.full_name || username}!`,
+            });
+            navigate('/admin/analytics');
+          } else {
+            toast({
+              title: "Login Failed",
+              description: result.message || "Invalid admin credentials.",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          toast({
+            title: "Login Failed",
+            description: error instanceof Error ? error.message : "Invalid admin credentials.",
+            variant: "destructive",
+          });
+        }
       } else if (selectedRole === 'parent') {
-        navigate('/parent/dashboard');
+        // Parent authentication using database
+        try {
+          const result = await apiClient.parentLogin(username, password);
+          if (result.success) {
+            // Store parent token and data
+            localStorage.setItem('parentToken', result.data.token);
+            localStorage.setItem('parentData', JSON.stringify(result.data.parent));
+            
+            toast({
+              title: "Login Successful",
+              description: `Welcome back, ${result.data.parent.full_name || username}!`,
+            });
+            navigate('/parent/dashboard');
+          } else {
+            toast({
+              title: "Login Failed",
+              description: result.message || "Invalid parent credentials.",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          toast({
+            title: "Login Failed",
+            description: error instanceof Error ? error.message : "Invalid parent credentials.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // This should never happen as we've covered all roles
+        toast({
+          title: "Error",
+          description: "Unknown role selected.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
-        variant: "destructive",
         title: "Login Failed",
-        description: "Please check your credentials and try again",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -176,6 +243,7 @@ const Index = () => {
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={!selectedRole}
                   required
+                  autoComplete="username"
                   className={`mt-1 h-12 text-base transition-all duration-200 bg-white/90 backdrop-blur-sm ${
                     !selectedRole 
                       ? 'bg-gray-100/90 text-gray-400 cursor-not-allowed' 
@@ -195,6 +263,7 @@ const Index = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={!selectedRole}
                   required
+                  autoComplete="current-password"
                   className={`mt-1 h-12 text-base transition-all duration-200 bg-white/90 backdrop-blur-sm ${
                     !selectedRole 
                       ? 'bg-gray-100/90 text-gray-400 cursor-not-allowed' 

@@ -6,6 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useMarkStudentAttendance, useMarkCoachAttendance, useStudents, useCreateDrill } from '@/lib/api';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useCoachAuth } from '@/contexts/CoachAuthContext';
+import { User, Mail, Phone, Calendar, Trophy } from 'lucide-react';
 
 interface Student {
   id: string;
@@ -20,45 +24,37 @@ const CoachDashboard = () => {
   const [checkInTime, setCheckInTime] = useState<Date | null>(null);
   const { toast } = useToast();
   const [drillTitle, setDrillTitle] = useState('Passing and Dribbling');
+  const { coach, isLoggedIn, isLoading: authLoading } = useCoachAuth();
+  
+  // API mutations for attendance and drills
+  const markStudentAttendanceMutation = useMarkStudentAttendance();
+  const markCoachAttendanceMutation = useMarkCoachAttendance();
+  const createDrillMutation = useCreateDrill();
+  const { data: studentsData = [], isLoading: studentsLoading } = useStudents();
+  
   const [drillImage, setDrillImage] = useState('https://images.unsplash.com/photo-1543351348-385b61a20366?w=400&h=225&fit=crop');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [newDrillTitle, setNewDrillTitle] = useState('');
   const [newDrillImageFile, setNewDrillImageFile] = useState<File | null>(null);
   const [selectedBatch, setSelectedBatch] = useState<string>('All Batches');
   
-  const [students, setStudents] = useState<Student[]>([
-    {
-      id: '1',
-      name: 'John Smith',
-      rollNumber: 'S001',
-      batch: 'Morning Batch A',
-      status: 'present'
-    }, {
-      id: '2',
-      name: 'Emma Johnson',
-      rollNumber: 'S002',
-      batch: 'Morning Batch A',
-      status: 'present'
-    }, {
-      id: '3',
-      name: 'Michael Brown',
-      rollNumber: 'S003',
-      batch: 'Morning Batch A',
-      status: 'present'
-    }, {
-      id: '4',
-      name: 'Sarah Davis',
-      rollNumber: 'S004',
-      batch: 'Evening Batch B',
-      status: 'present'
-    }, {
-      id: '5',
-      name: 'David Wilson',
-      rollNumber: 'S005',
-      batch: 'Evening Batch B',
-      status: 'present'
+  // Convert students data to local format with mock batch assignment
+  const [students, setStudents] = useState<Student[]>([]);
+  
+  // Update students when data loads
+  React.useEffect(() => {
+    if (Array.isArray(studentsData) && studentsData.length > 0) {
+      const batches = ['Morning Batch A', 'Evening Batch B', 'Afternoon Batch C'];
+      const convertedStudents = (studentsData as any[]).slice(0, 10).map((student, index) => ({
+        id: student.id.toString(),
+        name: student.name,
+        rollNumber: student.roll_number,
+        batch: batches[index % batches.length],
+        status: 'present' as const
+      }));
+      setStudents(convertedStudents);
     }
-  ]);
+  }, [studentsData]);
 
   // Get unique batches from students
   const uniqueBatches = Array.from(new Set(students.map(student => student.batch)));
@@ -67,6 +63,48 @@ const CoachDashboard = () => {
   const filteredStudents = selectedBatch === 'All Batches' 
     ? students 
     : students.filter(student => student.batch === selectedBatch);
+
+  // Loading state - show loading for both auth and students
+  if (authLoading || studentsLoading) {
+    return (
+      <DashboardLayout
+        title="Coach Dashboard"
+        userType="coach"
+        currentPath="/coach/dashboard"
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array(6).fill(0).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <Skeleton className="h-4 w-2/3 mb-2" />
+                  <Skeleton className="h-8 w-1/2 mb-2" />
+                  <Skeleton className="h-3 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!isLoggedIn || !coach) {
+    return (
+      <DashboardLayout
+        title="Coach Dashboard"
+        userType="coach"
+        currentPath="/coach/dashboard"
+      >
+        <div className="flex items-center justify-center h-64">
+          <Card className="p-6">
+            <p className="text-lg text-gray-600">Please log in to access the coach dashboard.</p>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const handleCheckIn = () => {
     const timestamp = new Date();
@@ -135,76 +173,80 @@ const CoachDashboard = () => {
     });
   };
 
-  const handleCheckOut = () => {
+  const handleCheckOut = async () => {
     const checkOutTime = new Date();
     const duration = checkInTime ? 
       Math.round((checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60)) : 0;
+    const currentDate = checkOutTime.toISOString().split('T')[0]; // YYYY-MM-DD format
     
-    // Get exit location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const exitLocation = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            timestamp: position.timestamp,
-            address: `Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`
-          };
-          
-          const sessionData = {
-            checkInTime: checkInTime?.toISOString() || null,
-            checkOutTime: checkOutTime.toISOString(),
-            durationMinutes: duration,
-            sessionDate: checkOutTime.toDateString(),
-            coachStatus: 'checked-out',
-            exitLocation: exitLocation
-          };
-
-          console.log('=== COACH CHECK-OUT ===');
-          console.log('Check-out initiated at:', checkOutTime.toISOString());
-          console.log('Check-in time was:', checkInTime?.toISOString() || 'Not recorded');
-          console.log('Session duration:', duration, 'minutes');
-          console.log('Exit location:', exitLocation);
-          console.log('Complete session data:', sessionData);
-          console.log('Coach state updated: isCheckedIn = false');
-          console.log('=======================');
-        },
-        (error) => {
-          console.log('Exit location failed:', error.message);
-          const sessionData = {
-            checkInTime: checkInTime?.toISOString() || null,
-            checkOutTime: checkOutTime.toISOString(),
-            durationMinutes: duration,
-            sessionDate: checkOutTime.toDateString(),
-            coachStatus: 'checked-out',
-            exitLocation: null,
-            exitLocationError: error.message
-          };
-          console.log('Session data (no exit location):', sessionData);
+    try {
+      // Get exit location
+      const exitLocation = await new Promise<any>((resolve) => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              resolve({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                timestamp: position.timestamp,
+                address: `Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`
+              });
+            },
+            (error) => {
+              console.log('Exit location failed:', error.message);
+              resolve(null);
+            }
+          );
+        } else {
+          resolve(null);
         }
-      );
-    } else {
-      const sessionData = {
-        checkInTime: checkInTime?.toISOString() || null,
-        checkOutTime: checkOutTime.toISOString(),
-        durationMinutes: duration,
-        sessionDate: checkOutTime.toDateString(),
-        coachStatus: 'checked-out',
-        exitLocation: null,
-        exitLocationError: 'Geolocation not supported'
+      });
+
+      // Save coach attendance to database
+      const coachAttendanceData = {
+        coachId: coach.id, // Use authenticated coach ID
+        date: currentDate,
+        status: 'Present',
+        entryLocation: null, // You can implement entry location tracking in check-in
+        exitLocation: exitLocation,
+        totalHours: duration / 60, // Convert minutes to hours
+        notes: `Session: ${duration} minutes. Check-in: ${checkInTime?.toLocaleTimeString() || 'N/A'}, Check-out: ${checkOutTime.toLocaleTimeString()}`
       };
-      console.log('Session data (no geolocation support):', sessionData);
+
+      await markCoachAttendanceMutation.mutateAsync(coachAttendanceData);
+
+      console.log('=== COACH ATTENDANCE SAVED TO DATABASE ===');
+      console.log('Date:', currentDate);
+      console.log('Check-in time:', checkInTime?.toISOString());
+      console.log('Check-out time:', checkOutTime.toISOString());
+      console.log('Session duration:', duration, 'minutes');
+      console.log('Exit location:', exitLocation);
+      console.log('=========================================');
+
+      setIsCheckedIn(false);
+      setCheckInTime(null);
+      
+      toast({
+        title: "✅ Checked Out & Saved to Database",
+        description: `Session duration: ${duration} minutes - Attendance saved to Supabase`,
+      });
+
+    } catch (error) {
+      console.error('Error saving coach attendance:', error);
+      
+      // Still update UI state even if database save fails
+      setIsCheckedIn(false);
+      setCheckInTime(null);
+      
+      toast({
+        title: "⚠️ Checked Out (Database Error)",
+        description: `Session ended but failed to save to database. Duration: ${duration} minutes`,
+        variant: "destructive",
+      });
     }
-    
-    setIsCheckedIn(false);
-    setCheckInTime(null);
-    
-    toast({
-      title: "Checked Out",
-      description: `Session duration: ${duration} minutes with location tracking`,
-    });
   };
+
   const setStudentStatus = (studentId: string, status: 'present' | 'absent') => {
     console.log('Setting student status for student ID:', studentId, 'to:', status);
     
@@ -216,55 +258,100 @@ const CoachDashboard = () => {
       return student;
     }));
   };
-  const handleSubmitAttendance = () => {
-    const attendanceData = {
-      submissionTime: new Date().toISOString(),
-      sessionDate: new Date().toDateString(),
-      coachCheckIn: checkInTime?.toISOString() || null,
-      selectedBatch: selectedBatch,
-      totalStudents: filteredStudents.length,
-      presentCount: filteredStudents.filter(s => s.status === 'present').length,
-      absentCount: filteredStudents.filter(s => s.status === 'absent').length,
-      students: filteredStudents.map(student => ({
-        id: student.id,
-        name: student.name,
-        rollNumber: student.rollNumber,
-        batch: student.batch,
-        status: student.status
-      }))
-    };
+  const handleSubmitAttendance = async () => {
+    const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    try {
+      // Mark attendance for each student
+      const attendancePromises = filteredStudents.map(student => {
+        const attendanceData = {
+          studentId: parseInt(student.id), // Convert to number for backend
+          date: currentDate,
+          status: student.status === 'present' ? 'Present' : 'Absent', // Capitalize for backend
+          batch: student.batch,
+          notes: `Marked by coach on ${new Date().toLocaleString()}`
+        };
 
-    console.log('=== ATTENDANCE SUBMISSION ===');
-    console.log('Submission initiated at:', new Date().toISOString());
-    console.log('Session date:', attendanceData.sessionDate);
-    console.log('Selected batch:', attendanceData.selectedBatch);
-    console.log('Coach check-in time:', attendanceData.coachCheckIn);
-    console.log('Total students (filtered):', attendanceData.totalStudents);
-    console.log('Present students:', attendanceData.presentCount);
-    console.log('Absent students:', attendanceData.absentCount);
-    console.log('Detailed attendance:');
-    attendanceData.students.forEach(student => {
-      console.log(`- ${student.name} (${student.rollNumber}): ${student.status.toUpperCase()}`);
-    });
-    console.log('Complete attendance data:', attendanceData);
-    console.log('==============================');
+        return markStudentAttendanceMutation.mutateAsync(attendanceData);
+      });
 
-    toast({
-      title: "Attendance Submitted",
-      description: `${attendanceData.presentCount} present, ${attendanceData.absentCount} absent${selectedBatch !== 'All Batches' ? ` in ${selectedBatch}` : ''}`,
-    });
-  };  const handleDrillUpdate = () => {
-    if (newDrillTitle) {
-      setDrillTitle(newDrillTitle);
+      // Wait for all attendance records to be saved
+      await Promise.all(attendancePromises);
+
+      const presentCount = filteredStudents.filter(s => s.status === 'present').length;
+      const absentCount = filteredStudents.filter(s => s.status === 'absent').length;
+
+      console.log('=== ATTENDANCE SAVED TO DATABASE ===');
+      console.log('Date:', currentDate);
+      console.log('Batch:', selectedBatch);
+      console.log('Present students:', presentCount);
+      console.log('Absent students:', absentCount);
+      console.log('Total students:', filteredStudents.length);
+      console.log('====================================');
+
+      toast({
+        title: "✅ Attendance Saved to Database",
+        description: `${presentCount} present, ${absentCount} absent - Data saved to Supabase`,
+      });
+
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      toast({
+        title: "❌ Error Saving Attendance",
+        description: "Failed to save attendance to database. Please try again.",
+        variant: "destructive",
+      });
     }
-    if (newDrillImageFile) {
-      setDrillImage(URL.createObjectURL(newDrillImageFile));
+  };  const handleDrillUpdate = async () => {
+    try {
+      if (!newDrillTitle.trim()) {
+        toast({
+          title: "Error",
+          description: "Please provide a drill title.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const drillData = {
+        title: newDrillTitle,
+        description: `Drill activity for ${selectedBatch} by ${coach.name}`,
+        date: new Date().toISOString().split('T')[0],
+        sport: coach.sports[0] || 'Football', // Use coach's primary sport
+        participants: students.filter(s => s.status === 'present').length || 1,
+        instructor_id: coach.id, // Use authenticated coach ID
+        duration: '45 minutes'
+      };
+
+      await createDrillMutation.mutateAsync({
+        drillData,
+        imageFile: newDrillImageFile || undefined
+      });
+
+      // Update local state for immediate feedback
+      if (newDrillTitle) {
+        setDrillTitle(newDrillTitle);
+      }
+      if (newDrillImageFile) {
+        setDrillImage(URL.createObjectURL(newDrillImageFile));
+      }
+
+      setIsUploadDialogOpen(false);
+      setNewDrillTitle('');
+      setNewDrillImageFile(null);
+
+      toast({
+        title: "Drill Created",
+        description: "The drill activity has been successfully created and saved.",
+      });
+    } catch (error) {
+      console.error('Failed to create drill:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create drill activity. Please try again.",
+        variant: "destructive",
+      });
     }
-    setIsUploadDialogOpen(false);
-    toast({
-      title: "Drill Updated",
-      description: "The drill activity has been successfully updated.",
-    });
   };
 
   const getStatusButtons = (student: Student) => {
@@ -295,11 +382,77 @@ const CoachDashboard = () => {
   };
   return (
     <DashboardLayout
-      title="Coach Dashboard"
+      title={`Welcome, ${coach.name}`}
       userType="coach"
       currentPath="/coach/dashboard"
     >
       <div className="space-y-6">
+        {/* Coach Profile Section */}
+        <Card className="shadow-md rounded-lg border-l-4 border-l-blue-500">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold text-gray-700 flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Coach Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-blue-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Name</p>
+                  <p className="font-semibold">{coach.name}</p>
+                </div>
+              </div>
+              
+              {coach.email && (
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-green-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="font-semibold">{coach.email}</p>
+                  </div>
+                </div>
+              )}
+              
+              {coach.phone && (
+                <div className="flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-purple-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Phone</p>
+                    <p className="font-semibold">{coach.phone}</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-3">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Sports</p>
+                  <p className="font-semibold">{coach.sports.join(', ')}</p>
+                </div>
+              </div>
+              
+              {coach.experience_years && (
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Experience</p>
+                    <p className="font-semibold">{coach.experience_years} years</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-3">
+                <div className={`h-3 w-3 rounded-full ${coach.status === 'Active' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <div>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <p className="font-semibold">{coach.status}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         {/* Check In/Out Button */}
         <Card className="shadow-md rounded-lg">
           <CardHeader className="pb-4">

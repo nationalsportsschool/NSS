@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DateInput } from '@/components/ui/date-input';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -22,14 +23,16 @@ const formSchema = z.object({
   studentName: z.string().min(1, 'Student name is required'),
   dateOfBirth: z.string().min(1, 'Date of birth is required').regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Date must be in dd/mm/yyyy format'),
   address: z.string().min(1, 'Address is required'),
+  parentName: z.string().min(1, 'Parent name is required'),
   parentNumber: z.string().min(1, 'Parent number is required'),
+  parentUsername: z.string().min(3, 'Username must be at least 3 characters'),
+  parentPassword: z.string().min(4, 'Password must be at least 4 characters'),
   weight: z.string().min(1, 'Weight is required'),
   height: z.string().min(1, 'Height is required'),
-  interestedGame: z.string().min(1, 'Please select a sport/game'),
+  interestedGames: z.array(z.string()).min(1, 'Please select at least one sport').max(2, 'You can select maximum 2 sports'),
   governmentSchool: z.string().min(1, 'Please select Yes or No'),
   schoolName: z.string().min(1, 'School name is required'),
   sex: z.string().min(1, 'Please select gender'),
-  nationality: z.string().min(1, 'Nationality is required'),
   groupBatch: z.string().min(1, 'Please select group/batch')
 });
 
@@ -44,41 +47,109 @@ const StudentRegistrationForm = ({ onBack, onSuccess }: StudentRegistrationFormP
       studentName: '',
       dateOfBirth: '',
       address: '',
+      parentName: '',
       parentNumber: '',
+      parentUsername: '',
+      parentPassword: '',
       weight: '',
       height: '',
-      interestedGame: '',
+      interestedGames: [],
       governmentSchool: '',
       schoolName: '',
       sex: '',
-      nationality: '',
       groupBatch: ''
     }
   });
 
-  const generateCredentials = () => {
-    const username = `parent_${form.getValues('studentName').toLowerCase().replace(/\s+/g, '_')}_${Math.random().toString(36).substring(7)}`;
-    const password = Math.random().toString(36).substring(2, 10);
-    return { username, password };
+  // Mapping functions to convert form values to database enum values
+  const mapSportToEnum = (sport: string): string => {
+    const sportMap: { [key: string]: string } = {
+      'football': 'Football',
+      'basketball': 'Basketball', 
+      'tennis': 'Tennis',
+      'swimming': 'Swimming',
+      'cricket': 'Cricket',
+      'badminton': 'Basketball', // Map to existing enum value since Badminton isn't in enum
+      'volleyball': 'Basketball' // Map to existing enum value since Volleyball isn't in enum
+    };
+    return sportMap[sport] || 'Football';
   };
 
-  const onSubmit = (data: FormData) => {
-    const credentials = generateCredentials();
-    
-    console.log('=== STUDENT REGISTRATION ===');
-    console.log('Student Name:', data.studentName);
-    console.log('Date of Birth:', data.dateOfBirth);
-    console.log('Sport Interest:', data.interestedGame);
-    console.log('Parent Credentials Generated:', credentials);
-    console.log('Registration Time:', new Date().toISOString());
-    console.log('===========================');
-    
-    toast({
-      title: "Student Added Successfully",
-      description: `${data.studentName} has been registered`,
-    });
-    
-    onSuccess(credentials);
+  const mapGroupToEnum = (group: string): string => {
+    const groupMap: { [key: string]: string } = {
+      'beginners': 'Beginners',
+      'intermediate': 'Intermediate', 
+      'advanced': 'Advanced',
+      'junior': 'Beginners', // Map junior to Beginners
+      'senior': 'Intermediate' // Map senior to Intermediate
+    };
+    return groupMap[group] || 'Beginners';
+  };
+
+  const onSubmit = async (data: FormData) => {
+    try {
+      console.log('=== STUDENT REGISTRATION ===');
+      console.log('Student Name:', data.studentName);
+      console.log('Date of Birth:', data.dateOfBirth);
+      console.log('Sport Interest:', data.interestedGames);
+      console.log('Parent Credentials:', data.parentUsername, data.parentPassword);
+      console.log('Registration Time:', new Date().toISOString());
+      console.log('===========================');
+
+      // Call the API to create student with parent
+      const response = await fetch('http://localhost:5000/api/students/with-parent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentName: data.studentName,
+          sport: mapSportToEnum(data.interestedGames[0]), // Use mapped enum value
+          // secondarySport: data.interestedGames[1] ? mapSportToEnum(data.interestedGames[1]) : null, // Commented out until DB migration
+          groupLevel: mapGroupToEnum(data.groupBatch), // Use mapped enum value
+          feePlan: 'monthly', // Default fee plan
+          feeAmount: 2000, // Default fee amount
+          parentName: data.parentName,
+          parentContact: data.parentNumber,
+          parentUsername: data.parentUsername, // Use exact username from form
+          parentPassword: data.parentPassword, // Use exact password from form
+          // Additional data
+          dateOfBirth: data.dateOfBirth,
+          address: data.address,
+          weight: data.weight,
+          height: data.height,
+          governmentSchool: data.governmentSchool,
+          schoolName: data.schoolName,
+          sex: data.sex
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to register student');
+      }
+
+      const result = await response.json();
+      
+      toast({
+        title: "Student Registered Successfully",
+        description: `${data.studentName} has been registered. Parent credentials have been created.`,
+      });
+
+      // Return the exact credentials entered by the parent
+      onSuccess({
+        username: data.parentUsername,
+        password: data.parentPassword
+      });
+
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Registration Failed",
+        description: error instanceof Error ? error.message : "Something went wrong during registration",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -137,7 +208,7 @@ const StudentRegistrationForm = ({ onBack, onSuccess }: StudentRegistrationFormP
                     )}
                   />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                     <FormField
                       control={form.control}
                       name="sex"
@@ -156,20 +227,6 @@ const StudentRegistrationForm = ({ onBack, onSuccess }: StudentRegistrationFormP
                               <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="nationality"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nationality *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter nationality" {...field} />
-                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -197,6 +254,20 @@ const StudentRegistrationForm = ({ onBack, onSuccess }: StudentRegistrationFormP
 
                   <FormField
                     control={form.control}
+                    name="parentName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Parent's Full Name *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter parent's full name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="parentNumber"
                     render={({ field }) => (
                       <FormItem>
@@ -208,6 +279,36 @@ const StudentRegistrationForm = ({ onBack, onSuccess }: StudentRegistrationFormP
                       </FormItem>
                     )}
                   />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="parentUsername"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Parent Login Username *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Choose username for parent login" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="parentPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Parent Login Password *</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="Choose password for parent login" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
                 {/* Physical Information */}
@@ -250,26 +351,39 @@ const StudentRegistrationForm = ({ onBack, onSuccess }: StudentRegistrationFormP
                   
                   <FormField
                     control={form.control}
-                    name="interestedGame"
+                    name="interestedGames"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Interested Sport *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select sport/game" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="football">Football</SelectItem>
-                            <SelectItem value="basketball">Basketball</SelectItem>
-                            <SelectItem value="tennis">Tennis</SelectItem>
-                            <SelectItem value="swimming">Swimming</SelectItem>
-                            <SelectItem value="cricket">Cricket</SelectItem>
-                            <SelectItem value="badminton">Badminton</SelectItem>
-                            <SelectItem value="volleyball">Volleyball</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Interested Sports * (Select 1-2 sports)</FormLabel>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          {['football', 'basketball', 'tennis', 'swimming', 'cricket', 'badminton', 'volleyball'].map((sport) => (
+                            <div key={sport} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={sport}
+                                checked={field.value?.includes(sport) || false}
+                                onCheckedChange={(checked) => {
+                                  const currentGames = field.value || [];
+                                  if (checked) {
+                                    if (currentGames.length < 2) {
+                                      field.onChange([...currentGames, sport]);
+                                    }
+                                  } else {
+                                    field.onChange(currentGames.filter((game) => game !== sport));
+                                  }
+                                }}
+                                disabled={(field.value?.length >= 2 && !field.value?.includes(sport)) || false}
+                              />
+                              <label 
+                                htmlFor={sport} 
+                                className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize ${
+                                  (field.value?.length >= 2 && !field.value?.includes(sport)) ? 'opacity-50' : ''
+                                }`}
+                              >
+                                {sport}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}

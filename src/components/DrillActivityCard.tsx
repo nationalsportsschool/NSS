@@ -20,11 +20,21 @@ interface DrillActivityCardProps {
 }
 
 const DrillActivityCard: React.FC<DrillActivityCardProps> = ({ activity }) => {
+  const getImageSrc = (imageUrl: string) => {
+    if (!imageUrl || imageUrl === '/placeholder.svg') {
+      return 'https://images.unsplash.com/photo-1543351348-385b61a20366?w=400&h=225&fit=crop';
+    }
+    if (imageUrl.startsWith('http')) {
+      return imageUrl; // Full URL (Supabase or external)
+    }
+    return `https://images.unsplash.com/${imageUrl}?w=400&h=225&fit=crop`; // Legacy format
+  };
+
   return (
     <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <div className="aspect-video relative overflow-hidden">
         <img 
-          src={`https://images.unsplash.com/${activity.image}?w=400&h=225&fit=crop`}
+          src={getImageSrc(activity.image)}
           alt={activity.title}
           className="w-full h-full object-cover"
         />
