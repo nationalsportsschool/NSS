@@ -96,8 +96,13 @@ const StudentRegistrationForm = ({ onBack, onSuccess }: StudentRegistrationFormP
       console.log('Registration Time:', new Date().toISOString());
       console.log('===========================');
 
+      // API Base URL
+      const API_BASE_URL = process.env.NODE_ENV === 'production' 
+        ? 'https://nssbackend-czak.onrender.com/api'
+        : 'http://localhost:5000/api';
+
       // Call the API to create student with parent
-      const response = await fetch('http://localhost:5000/api/students/with-parent', {
+      const response = await fetch(`${API_BASE_URL}/students/with-parent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

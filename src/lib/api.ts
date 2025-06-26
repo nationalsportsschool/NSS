@@ -6,7 +6,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://nssbackend-czak.onrender.com/api'
+  : 'http://localhost:5000/api';
 
 // API Client
 class ApiClient {
