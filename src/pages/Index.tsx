@@ -10,6 +10,7 @@ import { useCoachAuth } from '@/contexts/CoachAuthContext';
 import { apiClient } from '@/lib/api';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import BackendConnectivityTest from '@/components/VercelConnectivityTest';
+import EnhancedConnectivityTest from '@/components/EnhancedConnectivityTest';
 
 const Index = () => {
   const [selectedRole, setSelectedRole] = useState<'admin' | 'coach' | 'parent' | null>(null);
@@ -306,9 +307,9 @@ const Index = () => {
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
       
-      {/* Backend Connectivity Test - Temporary for debugging */}
+      {/* Enhanced Connectivity Test - Shows environment variables and comprehensive testing */}
       <div className="mt-16">
-        <BackendConnectivityTest />
+        <EnhancedConnectivityTest />
       </div>
     </div>
   );
