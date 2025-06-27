@@ -5,8 +5,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-// API Base URL - Force production backend URL
-const API_BASE_URL = 'https://nssbackend-czak.onrender.com/api';
+// API Base URL - Use environment variable or fallback to production URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://nssbackend-czak.onrender.com/api';
 
 // API Client
 class ApiClient {
