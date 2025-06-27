@@ -109,10 +109,6 @@ const CoachDashboard = () => {
   const handleCheckIn = () => {
     const timestamp = new Date();
     
-    console.log('=== COACH CHECK-IN ===');
-    console.log('Check-in initiated at:', timestamp.toISOString());
-    console.log('Formatted time:', timestamp.toLocaleString());
-    
     // Get location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -164,8 +160,6 @@ const CoachDashboard = () => {
 
     setIsCheckedIn(true);
     setCheckInTime(timestamp);
-    console.log('Coach state updated: isCheckedIn = true');
-    console.log('======================');
     
     toast({
       title: "Checked In",
@@ -194,7 +188,6 @@ const CoachDashboard = () => {
               });
             },
             (error) => {
-              console.log('Exit location failed:', error.message);
               resolve(null);
             }
           );
@@ -215,14 +208,6 @@ const CoachDashboard = () => {
       };
 
       await markCoachAttendanceMutation.mutateAsync(coachAttendanceData);
-
-      console.log('=== COACH ATTENDANCE SAVED TO DATABASE ===');
-      console.log('Date:', currentDate);
-      console.log('Check-in time:', checkInTime?.toISOString());
-      console.log('Check-out time:', checkOutTime.toISOString());
-      console.log('Session duration:', duration, 'minutes');
-      console.log('Exit location:', exitLocation);
-      console.log('=========================================');
 
       setIsCheckedIn(false);
       setCheckInTime(null);

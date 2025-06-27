@@ -247,8 +247,8 @@ const ParentDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Pending Fees</p>
-                  <p className="text-2xl font-bold text-red-600">₹10</p>
-                  <p className="text-xs text-muted-foreground">Test payment</p>
+                  <p className="text-2xl font-bold text-red-600">₹2,500</p>
+                  <p className="text-xs text-muted-foreground">Sports fees pending</p>
                 </div>
                 <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
                   <CreditCard className="h-6 w-6 text-red-600" />

@@ -88,18 +88,8 @@ const StudentRegistrationForm = ({ onBack, onSuccess }: StudentRegistrationFormP
 
   const onSubmit = async (data: FormData) => {
     try {
-      console.log('=== STUDENT REGISTRATION ===');
-      console.log('Student Name:', data.studentName);
-      console.log('Date of Birth:', data.dateOfBirth);
-      console.log('Sport Interest:', data.interestedGames);
-      console.log('Parent Credentials:', data.parentUsername, data.parentPassword);
-      console.log('Registration Time:', new Date().toISOString());
-      console.log('===========================');
-
-      // API Base URL
-      const API_BASE_URL = process.env.NODE_ENV === 'production' 
-        ? 'https://nssbackend-czak.onrender.com/api'
-        : 'http://localhost:5000/api';
+      // API Base URL - Force production backend URL
+      const API_BASE_URL = 'https://nssbackend-czak.onrender.com/api';
 
       // Call the API to create student with parent
       const response = await fetch(`${API_BASE_URL}/students/with-parent`, {
