@@ -5,8 +5,17 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-// API Base URL - Use environment variable or fallback to production URL
+// API Base URL - Use environment variable with fallback
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://nssbackend-czak.onrender.com/api';
+
+// Log API configuration in development
+if (import.meta.env.DEV) {
+  console.log('🔗 API Configuration:', {
+    VITE_API_URL: import.meta.env.VITE_API_URL,
+    API_BASE_URL,
+    mode: import.meta.env.MODE
+  });
+}
 
 // API Client
 class ApiClient {

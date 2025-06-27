@@ -88,8 +88,8 @@ const StudentRegistrationForm = ({ onBack, onSuccess }: StudentRegistrationFormP
 
   const onSubmit = async (data: FormData) => {
     try {
-      // API Base URL - Use environment variable or fallback to production URL
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://nssbackend-czak.onrender.com/api';
+      // API Base URL - Force production backend URL
+      const API_BASE_URL = 'https://nssbackend-czak.onrender.com/api';
 
       // Call the API to create student with parent
       const response = await fetch(`${API_BASE_URL}/students/with-parent`, {

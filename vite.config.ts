@@ -5,8 +5,6 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-// Environment variables starting with VITE_ are automatically available in the app
-// Set VITE_API_URL in Vercel environment variables for backend URL
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
