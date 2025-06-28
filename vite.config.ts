@@ -15,11 +15,10 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' &&
     componentTagger(),
     VitePWA({
-      // Don't register in dev mode, main.tsx will handle unregistering
-      registerType: mode === 'production' ? 'autoUpdate' : 'prompt',
-      injectRegister: mode === 'production' ? 'auto' : null,
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
       devOptions: {
-        enabled: false, // Don't enable in dev mode
+        enabled: true, // Enable in dev mode for testing
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2}'],
@@ -65,9 +64,106 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      includeAssets: ['favicon.ico', 'robots.txt'],
-      // Use the existing manifest.json file instead of overriding it
-      manifest: false
+      includeAssets: ['favicon.ico', 'robots.txt', 'lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png'],
+      manifest: {
+        name: 'National Sports School Portal',
+        short_name: 'Sports Hub',
+        description: 'A comprehensive portal for sports school management',
+        start_url: '/?source=pwa',
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#1e40af',
+        orientation: 'portrait-primary',
+        scope: '/',
+        icons: [
+          {
+            src: '/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png',
+            sizes: '144x144',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png',
+            sizes: '96x96',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png',
+            sizes: '72x72',
+            type: 'image/png',
+            purpose: 'any'
+          }
+        ],
+        categories: ['education', 'sports', 'productivity'],
+        screenshots: [
+          {
+            src: '/lovable-uploads/33900580-8f8e-4c8d-b6d6-511af21db8ca.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Sports School Dashboard Interface'
+          }
+        ],
+        prefer_related_applications: false,
+        display_override: ['standalone', 'minimal-ui'],
+        shortcuts: [
+          {
+            name: 'Admin Dashboard',
+            short_name: 'Admin',
+            description: 'View admin dashboard',
+            url: '/admin/dashboard',
+            icons: [
+              {
+                src: '/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png',
+                sizes: '96x96'
+              }
+            ]
+          },
+          {
+            name: 'Coach Dashboard',
+            short_name: 'Coach',
+            description: 'View coach dashboard',
+            url: '/coach/dashboard',
+            icons: [
+              {
+                src: '/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png',
+                sizes: '96x96'
+              }
+            ]
+          },
+          {
+            name: 'Parent Dashboard',
+            short_name: 'Parent',
+            description: 'View parent dashboard',
+            url: '/parent/dashboard',
+            icons: [
+              {
+                src: '/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png',
+                sizes: '96x96'
+              }
+            ]
+          }
+        ]
+      }
     })
   ].filter(Boolean),
   resolve: {

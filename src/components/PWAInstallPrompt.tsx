@@ -50,15 +50,15 @@ const PWAInstallPrompt = () => {
     const hasPermaDismissed = localStorage.getItem('pwa-install-prompt-dismissed-permanently');
     if (hasPermaDismissed === 'true') return;
 
-    // Check if the prompt was recently dismissed (within 7 days)
+    // Check if the prompt was recently dismissed (within 3 days instead of 7)
     const tempDismissalTime = localStorage.getItem('pwa-install-prompt-seen');
     if (tempDismissalTime) {
       const dismissalDate = parseInt(tempDismissalTime, 10);
       const currentTime = Date.now();
-      const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+      const threeDaysInMs = 3 * 24 * 60 * 60 * 1000; // Reduced from 7 days
       
-      if (currentTime - dismissalDate < sevenDaysInMs) {
-        return; // Don't show if dismissed less than 7 days ago
+      if (currentTime - dismissalDate < threeDaysInMs) {
+        return; // Don't show if dismissed less than 3 days ago
       }
     }
 
@@ -68,18 +68,24 @@ const PWAInstallPrompt = () => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       
-      // Show after user has interacted with the page
-      setTimeout(() => {
-        setShowInstallPrompt(true);
-      }, 2000);
+      // Show immediately when the event fires
+      setShowInstallPrompt(true);
     };
 
     // Show appropriate prompt based on device
     if (!iOS) {
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      
+      // For testing purposes, show the prompt after a short delay even without the event
+      setTimeout(() => {
+        if (!deferredPrompt && !showInstallPrompt) {
+          console.log('No beforeinstallprompt event, showing manual prompt');
+          setShowInstallPrompt(true);
+        }
+      }, 3000);
     } else {
-      // For iOS, show our custom prompt after a delay to ensure good user experience
-      const iosPromptDelayMs = 5000; // 5 seconds
+      // For iOS, show our custom prompt after a shorter delay
+      const iosPromptDelayMs = 3000; // Reduced from 5 seconds
       setTimeout(() => {
         setShowInstallPrompt(true);
       }, iosPromptDelayMs);

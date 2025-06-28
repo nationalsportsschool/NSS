@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, User, Users } from 'lucide-react';
+import { Shield, User, Users, Download, Smartphone } from 'lucide-react';
 import { useCoachAuth } from '@/contexts/CoachAuthContext';
 import { apiClient } from '@/lib/api';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
@@ -15,9 +15,48 @@ const Index = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showInstallButton, setShowInstallButton] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login: coachLogin } = useCoachAuth();
+
+  // Check if we should show the install button
+  useEffect(() => {
+    const checkInstallability = () => {
+      // Check if PWA is already installed
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isInWebAppiOS = (window.navigator as any).standalone === true;
+      const isPWAInstalled = isStandalone || isInWebAppiOS;
+
+      // Check if user permanently dismissed
+      const hasPermaDismissed = localStorage.getItem('pwa-install-prompt-dismissed-permanently');
+      
+      // Detect iOS
+      const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      setIsIOS(iOS);
+
+      // Show install button if not installed and not permanently dismissed
+      if (!isPWAInstalled && hasPermaDismissed !== 'true') {
+        setShowInstallButton(true);
+      }
+    };
+
+    checkInstallability();
+  }, []);
+
+  const handleInstallApp = () => {
+    if (isIOS) {
+      toast({
+        title: "Install Sports Hub",
+        description: "Use Safari's share menu and tap 'Add to Home Screen' to install the app.",
+      });
+    } else {
+      // Try to trigger the install prompt
+      const event = new CustomEvent('show-pwa-prompt');
+      window.dispatchEvent(event);
+    }
+  };
 
   const roles = [
     {
@@ -179,10 +218,18 @@ const Index = () => {
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
             <img 
-              src="/lovable-uploads/33900580-8f8e-4c8d-b6d6-511af21db8ca.png" 
+              src="/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png" 
               alt="National Sports School Logo" 
               className="h-20 w-auto md:h-24 object-contain"
             />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+              National Sports School
+            </h1>
+            <p className="text-lg text-gray-600">
+              Excellence in Sports Education
+            </p>
           </div>
         </div>
 
@@ -300,6 +347,19 @@ const Index = () => {
             </p>
           )}
         </div>
+
+        {/* Floating Install Button */}
+        {showInstallButton && (
+          <div className="fixed top-4 right-4 z-40">
+            <Button
+              onClick={handleInstallApp}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 px-4 py-2 rounded-full"
+            >
+              {isIOS ? <Smartphone className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+              <span className="text-sm font-medium">Install App</span>
+            </Button>
+          </div>
+        )}
       </div>
       
       {/* PWA Install Prompt */}

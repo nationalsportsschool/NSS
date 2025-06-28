@@ -13,37 +13,37 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+      "src": "/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+      "src": "/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+      "src": "/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+      "src": "/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+      "src": "/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+      "src": "/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any"
@@ -75,7 +75,7 @@
       "url": "/admin/dashboard",
       "icons": [
         {
-          "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+          "src": "/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png",
           "sizes": "96x96"
         }
       ]
@@ -87,7 +87,7 @@
       "url": "/coach/dashboard",
       "icons": [
         {
-          "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+          "src": "/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png",
           "sizes": "96x96"
         }
       ]
@@ -99,7 +99,7 @@
       "url": "/parent/dashboard",
       "icons": [
         {
-          "src": "/lovable-uploads/b664e962-4870-4c4b-a986-a4f843478fce.png",
+          "src": "/lovable-uploads/d3e2c1ed-3a94-410a-92a5-4126a5366ca6.png",
           "sizes": "96x96"
         }
       ]
