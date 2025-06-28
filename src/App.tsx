@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CoachDashboard from "./pages/CoachDashboard";
 import CoachLogin from "./pages/CoachLogin";
 import ParentDashboard from "./pages/ParentDashboard";
+import Testing from "./pages/Testing";
 import NotFound from "./pages/NotFound";
 import AdminAnalytics from "./components/AdminAnalytics";
 
@@ -73,6 +74,7 @@ const App = () => {
               
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/testing" element={<Testing />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/coach/login" element={<CoachLogin />} />

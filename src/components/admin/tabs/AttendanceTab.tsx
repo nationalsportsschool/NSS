@@ -158,7 +158,7 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({
           </TabsList>
           <TabsContent value="students" className="mt-4">
             <p className="text-sm text-muted-foreground mb-2">Showing {studentAttendance.length} of {studentAttendance.length} records</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[450px] overflow-auto p-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {studentAttendance.map((record) => (
                 <Card key={record.id} className="shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader>
@@ -189,7 +189,7 @@ const AttendanceTab: React.FC<AttendanceTabProps> = ({
           </TabsContent>
           <TabsContent value="coaches" className="mt-4">
             <p className="text-sm text-muted-foreground mb-2">Showing {coachAttendance.length} of {coachAttendance.length} records</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[450px] overflow-auto p-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {coachAttendance.map((record) => (
                 <Card key={record.id} className="shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader>

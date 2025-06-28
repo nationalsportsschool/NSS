@@ -72,7 +72,7 @@ const AdminDashboard = () => {
     ? coachAttendanceData.map((record: any) => ({
         ...record,
         name: record.coach?.name || 'Unknown Coach',
-        sport: record.coach?.sport || 'Unknown Sport'
+        sport: Array.isArray(record.coach?.sports) ? record.coach.sports.join(', ') : 'Unknown Sport'
       }))
     : [];
 

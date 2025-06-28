@@ -9,8 +9,6 @@ import { Shield, User, Users } from 'lucide-react';
 import { useCoachAuth } from '@/contexts/CoachAuthContext';
 import { apiClient } from '@/lib/api';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import BackendConnectivityTest from '@/components/VercelConnectivityTest';
-import EnhancedConnectivityTest from '@/components/EnhancedConnectivityTest';
 
 const Index = () => {
   const [selectedRole, setSelectedRole] = useState<'admin' | 'coach' | 'parent' | null>(null);
@@ -306,11 +304,6 @@ const Index = () => {
       
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
-      
-      {/* Enhanced Connectivity Test - Shows environment variables and comprehensive testing */}
-      <div className="mt-16">
-        <EnhancedConnectivityTest />
-      </div>
     </div>
   );
 };
